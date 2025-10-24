@@ -18,13 +18,14 @@ final class AIService {
     private let functions: Functions
     
     private init() {
-        // Always use production Cloud Functions (even in debug/emulator)
-        // Auth and Firestore use emulator, but Functions use production
-        functions = Functions.functions()
-        
         #if DEBUG
-        // Note: Using PRODUCTION functions for AI (OpenAI key configured there)
-        // Auth & Firestore still use emulator
+        // Use local emulator for Cloud Functions in debug mode
+        functions = Functions.functions()
+        functions.useEmulator(withHost: "localhost", port: 5001)
+        print("🤖 AIService: Using LOCAL Cloud Functions Emulator")
+        #else
+        // Production: Use deployed Cloud Functions
+        functions = Functions.functions()
         print("🤖 AIService: Using PRODUCTION Cloud Functions")
         #endif
     }
