@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // User avatars
+    match /avatars/{userId}/{fileName} {
+      // Allow users to upload their own avatar
+      allow write: if request.auth != null && request.auth.uid == userId;
+      // Allow anyone to read avatars
+      allow read: if true;
+    }
+    
+    // Future: Message attachments
+    match /attachments/{conversationId}/{fileName} {
+      // Allow conversation participants to upload
+      allow write: if request.auth != null;
+      // Allow conversation participants to read
+      allow read: if request.auth != null;
+    }
+    
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
