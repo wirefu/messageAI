@@ -84,6 +84,15 @@ struct ConversationListView: View {
                         currentUserID: authViewModel.currentUser?.id ?? ""
                     )
                 }
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        Task {
+                            await viewModel.deleteConversation(conversation)
+                        }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
             }
         }
         .listStyle(.insetGrouped)

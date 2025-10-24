@@ -18,6 +18,7 @@ protocol ConversationRepositoryProtocol {
     func updateLastMessage(conversationID: String, message: Message) async throws
     func updateUnreadCount(conversationID: String, userID: String, increment: Bool) async throws
     func resetUnreadCount(conversationID: String, userID: String) async throws
+    func deleteConversation(id: String) async throws
 }
 
 /// Repository for conversation data operations with Firestore
@@ -149,6 +150,31 @@ final class ConversationRepository: ConversationRepositoryProtocol {
                 ])
         } catch {
             throw AppError.firestoreError("Failed to reset unread count: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Deletes a conversation and all its messages
+    func deleteConversation(id: String) async throws {
+        do {
+            // Delete all messages in the conversation first
+            let messagesSnapshot = try await db.collection(FirebaseConstants.conversationsCollection)
+                .document(id)
+                .collection(FirebaseConstants.messagesSubcollection)
+                .getDocuments()
+            
+            // Batch delete messages
+            let batch = db.batch()
+            for document in messagesSnapshot.documents {
+                batch.deleteDocument(document.reference)
+            }
+            try await batch.commit()
+            
+            // Then delete the conversation itself
+            try await db.collection(FirebaseConstants.conversationsCollection)
+                .document(id)
+                .delete()
+        } catch {
+            throw AppError.firestoreError("Failed to delete conversation: \(error.localizedDescription)")
         }
     }
     

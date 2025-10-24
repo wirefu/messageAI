@@ -79,6 +79,25 @@ final class ConversationListViewModel: ObservableObject {
         conversations.first { $0.id == conversationID }?.unreadCount(for: userID) ?? 0
     }
     
+    /// Deletes a conversation
+    /// - Parameter conversation: Conversation to delete
+    func deleteConversation(_ conversation: Conversation) async {
+        // Optimistic UI update
+        conversations.removeAll { $0.id == conversation.id }
+        
+        do {
+            try await repository.deleteConversation(id: conversation.id)
+        } catch let appError as AppError {
+            error = appError
+            // Reload on error
+            if let userID = conversations.first?.participants.first(where: { _ in true }) {
+                await loadConversations(for: userID)
+            }
+        } catch {
+            self.error = .firestoreError("Failed to delete conversation")
+        }
+    }
+    
     func clearError() {
         error = nil
     }
