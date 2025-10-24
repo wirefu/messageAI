@@ -55,3 +55,4 @@ final class MessageStatusTests: XCTestCase {
         XCTAssertEqual(MessageStatus.failed.displayText, "Failed to send")
     }
 }
+

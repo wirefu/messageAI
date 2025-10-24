@@ -322,3 +322,4 @@ final class SummaryAutoTriggerServiceTests: XCTestCase {
     }
 }
 
+

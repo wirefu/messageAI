@@ -135,3 +135,4 @@ struct LoginView: View {
     }
     .environmentObject(AuthViewModel())
 }
+

@@ -127,3 +127,4 @@ struct ConversationRowView: View {
         ConversationRowView(conversation: mockConversation, currentUserID: "user1")
     }
 }
+

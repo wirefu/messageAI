@@ -70,3 +70,4 @@ final class UserModelTests: XCTestCase {
         XCTAssertNotNil(firestoreData["createdAt"])
     }
 }
+

@@ -84,3 +84,4 @@ struct EmptyStateView: View {
         message: "Send your first message to start the conversation"
     )
 }
+

@@ -127,3 +127,4 @@ extension Message {
         senderID == currentUserID
     }
 }
+

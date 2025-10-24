@@ -45,3 +45,4 @@ struct ChatViewLoader: View {
         }
     }
 }
+

@@ -84,3 +84,4 @@ final class MessageModelTests: XCTestCase {
         XCTAssertFalse(message.isFromCurrentUser("user456"))
     }
 }
+

@@ -42,3 +42,4 @@ final class AISuggestionModelTests: XCTestCase {
         XCTAssertEqual(multiple.suggestionCount, 4)
     }
 }
+

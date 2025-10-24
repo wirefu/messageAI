@@ -70,3 +70,4 @@ final class ConversationModelTests: XCTestCase {
         XCTAssertFalse(conversation.includes(userID: "user3"))
     }
 }
+

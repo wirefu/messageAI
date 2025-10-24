@@ -37,3 +37,4 @@ Before App Store submission, create professional icon with:
 - Blue color scheme
 - Professional design
 
+

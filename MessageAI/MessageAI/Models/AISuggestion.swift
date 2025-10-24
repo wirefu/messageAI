@@ -60,3 +60,4 @@ extension AISuggestion {
         return count
     }
 }
+

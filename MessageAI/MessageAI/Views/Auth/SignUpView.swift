@@ -195,3 +195,4 @@ struct SignUpView: View {
     }
     .environmentObject(AuthViewModel())
 }
+
