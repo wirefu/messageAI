@@ -26,11 +26,19 @@ protocol MessageRepositoryProtocol {
 final class MessageRepository: MessageRepositoryProtocol {
     private let db = Firestore.firestore()
     private var listener: ListenerRegistration?
+    private let networkMonitor = NetworkMonitor.shared
+    private let offlineQueue = OfflineQueueService.shared
     
     // MARK: - Send
     
     /// Sends a message to a conversation
     func sendMessage(_ message: Message, to conversationID: String) async throws {
+        // If offline, queue the message
+        guard networkMonitor.isConnected else {
+            offlineQueue.enqueue(message)
+            throw AppError.networkUnavailable
+        }
+        
         do {
             // Save message
             try await db.collection(FirebaseConstants.conversationsCollection)
@@ -47,7 +55,20 @@ final class MessageRepository: MessageRepositoryProtocol {
                     FirebaseConstants.ConversationFields.lastMessageTimestamp: Timestamp(date: message.timestamp)
                 ])
         } catch {
+            // Queue on failure
+            offlineQueue.enqueue(message)
             throw AppError.firestoreError("Failed to send message: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Processes offline queue when connection is restored
+    func processOfflineQueue() async {
+        guard networkMonitor.isConnected else { return }
+        
+        let queuedMessages = offlineQueue.dequeueAll()
+        
+        for message in queuedMessages {
+            try? await sendMessage(message, to: message.conversationID)
         }
     }
     
