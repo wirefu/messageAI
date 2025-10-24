@@ -100,7 +100,9 @@ final class AIService {
     
     // MARK: - Response Parsing
     
-    private func parseSummaryResponse(_ response: [String: Any]) throws -> ConversationSummary {
+    /// Parses summary response from Cloud Function
+    /// Internal for testing purposes
+    func parseSummaryResponse(_ response: [String: Any]) throws -> ConversationSummary {
         let conversationID = response["conversationID"] as? String ?? ""
         let keyPoints = response["keyPoints"] as? [String] ?? []
         let decisions = response["decisions"] as? [String] ?? []
@@ -122,7 +124,9 @@ final class AIService {
         )
     }
     
-    private func parseClarityResponse(_ response: [String: Any]) throws -> AISuggestion {
+    /// Parses clarity response from Cloud Function
+    /// Internal for testing purposes
+    func parseClarityResponse(_ response: [String: Any]) throws -> AISuggestion {
         return AISuggestion(
             clarityIssues: response["clarityIssues"] as? [String],
             suggestedRevision: response["suggestedRevision"] as? String,
@@ -131,7 +135,9 @@ final class AIService {
         )
     }
     
-    private func parseActionItems(_ items: [[String: Any]], conversationID: String) throws -> [ActionItem] {
+    /// Parses action items from Cloud Function response
+    /// Internal for testing purposes
+    func parseActionItems(_ items: [[String: Any]], conversationID: String) throws -> [ActionItem] {
         return items.compactMap { item in
             guard let description = item["description"] as? String else { return nil }
             

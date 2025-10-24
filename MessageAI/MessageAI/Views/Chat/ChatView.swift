@@ -16,6 +16,9 @@ struct ChatView: View {
     @StateObject private var viewModel: ChatViewModel
     @State private var messageText = ""
     @State private var otherUser: User?
+    @State private var showingSummary = false
+    @State private var currentSummary: ConversationSummary?
+    @State private var isGeneratingSummary = false
     
     init(conversation: Conversation, currentUserID: String) {
         self.conversation = conversation
@@ -87,6 +90,28 @@ struct ChatView: View {
         }
         .navigationTitle(otherUser?.displayName ?? "Chat")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    Task {
+                        await generateSummary()
+                    }
+                } label: {
+                    if isGeneratingSummary {
+                        ProgressView()
+                            .tint(.blue)
+                    } else {
+                        Image(systemName: "doc.text.magnifyingglass")
+                    }
+                }
+                .disabled(viewModel.messages.isEmpty || isGeneratingSummary)
+            }
+        }
+        .sheet(isPresented: $showingSummary) {
+            if let summary = currentSummary {
+                SummaryView(summary: summary)
+            }
+        }
         .task {
             await loadOtherUser()
             await viewModel.markMessagesAsRead()
@@ -107,6 +132,23 @@ struct ChatView: View {
         
         let repository = UserRepository()
         otherUser = try? await repository.getUser(id: otherUserID)
+    }
+    
+    private func generateSummary() async {
+        isGeneratingSummary = true
+        defer { isGeneratingSummary = false }
+        
+        do {
+            let summary = try await AIService.shared.summarizeConversation(
+                conversationID: conversation.id,
+                messageCount: viewModel.messages.count
+            )
+            currentSummary = summary
+            showingSummary = true
+        } catch {
+            // Show error via viewModel
+            viewModel.error = .aiFunctionError("Failed to generate summary")
+        }
     }
 }
 
