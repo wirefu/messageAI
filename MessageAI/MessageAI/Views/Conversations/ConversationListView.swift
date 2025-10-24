@@ -13,6 +13,7 @@ struct ConversationListView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var viewModel = ConversationListViewModel()
     @State private var showingNewConversation = false
+    @State private var selectedConversationID: String?
     
     var body: some View {
         NavigationView {
@@ -45,9 +46,29 @@ struct ConversationListView: View {
             .sheet(isPresented: $showingNewConversation) {
                 NewConversationView(
                     currentUserID: authViewModel.currentUser?.id ?? ""
-                )
+                ) { conversationID in
+                    // Navigate to newly created conversation
+                    selectedConversationID = conversationID
+                }
                 .environmentObject(viewModel)
             }
+            .background(
+                Group {
+                    if let conversationID = selectedConversationID {
+                        NavigationLink(
+                            destination: ChatViewLoader(
+                                conversationID: conversationID,
+                                currentUserID: authViewModel.currentUser?.id ?? ""
+                            ),
+                            isActive: Binding(
+                                get: { selectedConversationID != nil },
+                                set: { if !$0 { selectedConversationID = nil } }
+                            ),
+                            label: { EmptyView() }
+                        )
+                    }
+                }
+            )
             .task {
                 if let userID = authViewModel.currentUser?.id {
                     viewModel.startObserving(for: userID)

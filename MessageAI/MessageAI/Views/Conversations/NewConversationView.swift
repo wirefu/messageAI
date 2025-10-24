@@ -14,6 +14,7 @@ struct NewConversationView: View {
     @EnvironmentObject var conversationViewModel: ConversationListViewModel
     
     let currentUserID: String
+    var onConversationCreated: (String) -> Void
     
     @State private var searchText = ""
     @State private var availableUsers: [User] = []
@@ -136,11 +137,12 @@ struct NewConversationView: View {
     
     private func createConversation(with user: User) async {
         do {
-            _ = try await conversationViewModel.createNewConversation(
+            let conversationID = try await conversationViewModel.createNewConversation(
                 currentUserID: currentUserID,
                 otherUserID: user.id
             )
             dismiss()
+            onConversationCreated(conversationID)
         } catch {
             // Error handled by ViewModel
         }
@@ -148,6 +150,8 @@ struct NewConversationView: View {
 }
 
 #Preview {
-    NewConversationView(currentUserID: "user123")
-        .environmentObject(ConversationListViewModel())
+    NewConversationView(currentUserID: "user123") { _ in
+        print("Conversation created")
+    }
+    .environmentObject(ConversationListViewModel())
 }
