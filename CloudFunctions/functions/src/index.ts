@@ -40,10 +40,24 @@ export const summarizeConversation = functions.https.onCall(async (data, context
       throw new functions.https.HttpsError('not-found', 'No messages in conversation');
     }
 
-    // Format messages for OpenAI
+    // Get user display names for better readability
+    const senderIDs = [...new Set(messagesSnapshot.docs.map(doc => doc.data().senderID))];
+    const userDocs = await Promise.all(
+      senderIDs.map(id => admin.firestore().collection('users').doc(id).get())
+    );
+    
+    const userNames: {[key: string]: string} = {};
+    userDocs.forEach(doc => {
+      if (doc.exists) {
+        userNames[doc.id] = doc.data()?.displayName || 'User';
+      }
+    });
+
+    // Format messages with user names (not IDs) for OpenAI
     const messageTexts = messagesSnapshot.docs.map(doc => {
       const msgData = doc.data();
-      return `${msgData.senderID}: ${msgData.content}`;
+      const userName = userNames[msgData.senderID] || 'User';
+      return `${userName}: ${msgData.content}`;
     }).join('\n');
 
     // Call OpenAI GPT-4 for summarization
