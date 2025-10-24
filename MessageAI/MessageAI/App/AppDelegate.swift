@@ -8,6 +8,7 @@
 
 import UIKit
 import FirebaseCore
+import FirebaseAuth
 import FirebaseFirestore
 
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -18,11 +19,24 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Configure Firebase
         FirebaseApp.configure()
         
-        // Enable Firestore offline persistence
+        #if DEBUG
+        // Use Firebase Emulator for local testing
+        Auth.auth().useEmulator(withHost: "localhost", port: 9099)
+        
+        let settings = Firestore.firestore().settings
+        settings.host = "localhost:8080"
+        settings.cacheSettings = MemoryCacheSettings()
+        settings.isSSLEnabled = false
+        Firestore.firestore().settings = settings
+        
+        print("🔥 Using Firebase Emulator (Auth: 9099, Firestore: 8080)")
+        #else
+        // Production: Enable Firestore offline persistence
         let settings = FirestoreSettings()
         settings.isPersistenceEnabled = true
         settings.cacheSizeBytes = FirestoreCacheSizeUnlimited
         Firestore.firestore().settings = settings
+        #endif
         
         print("✅ Firebase configured successfully")
         
