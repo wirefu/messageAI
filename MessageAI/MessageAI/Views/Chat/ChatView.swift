@@ -21,6 +21,7 @@ struct ChatView: View {
     @State private var currentSummary: ConversationSummary?
     @State private var isGeneratingSummary = false
     @State private var showingAutoTriggerPrompt = false
+    @State private var showingActionItems = false
     
     private let summaryRepository = SummaryRepository()
     private let autoTriggerService = SummaryAutoTriggerService.shared
@@ -98,25 +99,38 @@ struct ChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    Task {
-                        await generateSummary()
+                HStack(spacing: 12) {
+                    // Action Items Button
+                    Button {
+                        showingActionItems = true
+                    } label: {
+                        Image(systemName: "checklist")
                     }
-                } label: {
-                    if isGeneratingSummary {
-                        ProgressView()
-                            .tint(.blue)
-                    } else {
-                        Image(systemName: "doc.text.magnifyingglass")
+                    
+                    // Summarize Button
+                    Button {
+                        Task {
+                            await generateSummary()
+                        }
+                    } label: {
+                        if isGeneratingSummary {
+                            ProgressView()
+                                .tint(.blue)
+                        } else {
+                            Image(systemName: "doc.text.magnifyingglass")
+                        }
                     }
+                    .disabled(viewModel.messages.isEmpty || isGeneratingSummary)
                 }
-                .disabled(viewModel.messages.isEmpty || isGeneratingSummary)
             }
         }
         .sheet(isPresented: $showingSummary) {
             if let summary = currentSummary {
                 SummaryView(summary: summary)
             }
+        }
+        .sheet(isPresented: $showingActionItems) {
+            ActionItemsView(conversationID: conversation.id)
         }
         .alert("Catch Up with Summary", isPresented: $showingAutoTriggerPrompt) {
             Button("View Summary") {

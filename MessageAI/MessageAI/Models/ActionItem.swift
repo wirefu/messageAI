@@ -18,7 +18,7 @@ struct ActionItem: Codable, Identifiable, Equatable {
     let conversationID: String
 
     /// ID of the message this action was extracted from
-    let messageID: String
+    var messageID: String
 
     /// Description of the action item
     var description: String
