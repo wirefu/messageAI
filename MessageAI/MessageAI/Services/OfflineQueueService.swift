@@ -28,7 +28,7 @@ final class OfflineQueueService {
         var queue = getQueue()
         
         // Prevent queue from growing too large
-        guard queue.count < maxQueueSize else {
+        if queue.count >= maxQueueSize {
             print("⚠️ Offline queue full, dropping oldest message")
             queue.removeFirst()
         }
