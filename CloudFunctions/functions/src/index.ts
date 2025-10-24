@@ -30,15 +30,9 @@ export const summarizeConversation = functions.https.onCall(async (data, context
       .limit(messageCount || 20)
       .get();
 
-    // In production, we would analyze these messages with OpenAI
-    const _messages = messagesSnapshot.docs.map(doc => ({
-      content: doc.data().content,
-      senderID: doc.data().senderID,
-      timestamp: doc.data().timestamp
-    }));
-
-    // For emulator: Return mock summary based on message count
-    // In production: Call OpenAI API here with _messages
+    // For emulator: Return mock summary
+    // In production: Would fetch and analyze messages with OpenAI
+    // const messages = messagesSnapshot.docs.map(...)
     const summary = {
       conversationID,
       keyPoints: [
