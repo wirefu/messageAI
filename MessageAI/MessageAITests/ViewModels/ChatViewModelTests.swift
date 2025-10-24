@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import FirebaseFirestore
 @testable import MessageAI
 
 @MainActor
