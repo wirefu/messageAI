@@ -10,10 +10,6 @@ import SwiftUI
 
 /// Main chat view for a conversation
 struct ChatView: View {
-    #if DEBUG
-    @ObserveInjection var forceRedraw
-    #endif
-    
     let conversation: Conversation
     let currentUserID: String
     
@@ -93,9 +89,6 @@ struct ChatView: View {
             get: { viewModel.error },
             set: { _ in viewModel.clearError() }
         ))
-        #if DEBUG
-        .enableInjection()
-        #endif
     }
     
     private func loadOtherUser() async {
