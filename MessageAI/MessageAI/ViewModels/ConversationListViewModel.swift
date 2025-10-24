@@ -82,19 +82,28 @@ final class ConversationListViewModel: ObservableObject {
     /// Deletes a conversation
     /// - Parameter conversation: Conversation to delete
     func deleteConversation(_ conversation: Conversation) async {
+        print("🗑️ Attempting to delete conversation: \(conversation.id)")
+        
         // Optimistic UI update
         conversations.removeAll { $0.id == conversation.id }
         
         do {
             try await repository.deleteConversation(id: conversation.id)
+            print("✅ Conversation deleted successfully")
         } catch let appError as AppError {
+            print("❌ Delete failed with AppError: \(appError)")
             error = appError
-            // Reload on error
-            if let userID = conversations.first?.participants.first(where: { _ in true }) {
+            // Reload conversations on error to restore the deleted one
+            if let userID = conversation.participants.first {
                 await loadConversations(for: userID)
             }
         } catch {
+            print("❌ Delete failed with error: \(error)")
             self.error = .firestoreError("Failed to delete conversation")
+            // Reload on error
+            if let userID = conversation.participants.first {
+                await loadConversations(for: userID)
+            }
         }
     }
     

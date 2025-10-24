@@ -10,10 +10,6 @@ import SwiftUI
 
 /// Main view displaying list of user's conversations
 struct ConversationListView: View {
-    #if DEBUG
-    @ObserveInjection var forceRedraw
-    #endif
-    
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var viewModel = ConversationListViewModel()
     @State private var showingNewConversation = false
@@ -64,9 +60,6 @@ struct ConversationListView: View {
                 get: { viewModel.error },
                 set: { _ in viewModel.clearError() }
             ))
-            #if DEBUG
-            .enableInjection()
-            #endif
         }
     }
     
