@@ -33,7 +33,9 @@ final class ConversationListViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            conversations = try await repository.getConversations(for: userID)
+            let allConversations = try await repository.getConversations(for: userID)
+            // Only show conversations that have messages
+            conversations = allConversations.filter { $0.lastMessage != nil }
         } catch let appError as AppError {
             error = appError
         } catch {
@@ -44,7 +46,8 @@ final class ConversationListViewModel: ObservableObject {
     func startObserving(for userID: String) {
         repository.observeConversations(for: userID) { [weak self] conversations in
             Task { @MainActor in
-                self?.conversations = conversations
+                // Only show conversations that have messages
+                self?.conversations = conversations.filter { $0.lastMessage != nil }
             }
         }
     }

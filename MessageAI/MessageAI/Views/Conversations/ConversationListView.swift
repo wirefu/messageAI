@@ -125,7 +125,7 @@ struct ConversationListView: View {
         Button {
             showingNewConversation = true
         } label: {
-            Image(systemName: "square.and.pencil")
+            Image(systemName: "person.3.fill")
                 .font(.title3)
         }
     }
