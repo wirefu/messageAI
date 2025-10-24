@@ -1,0 +1,100 @@
+# Testing Best Practices
+
+## General Testing Rules
+
+- Write unit tests for ViewModels
+- Write unit tests for Repositories
+- Mock Firebase dependencies for testing
+- Test async code using expectations
+- Test error paths, not just happy paths
+
+## ViewModel Testing
+
+```swift
+@MainActor
+final class MessageViewModelTests: XCTestCase {
+    var viewModel: MessageViewModel!
+    var mockRepository: MockMessageRepository!
+    
+    override func setUp() {
+        mockRepository = MockMessageRepository()
+        viewModel = MessageViewModel(messageRepository: mockRepository)
+    }
+    
+    override func tearDown() {
+        viewModel = nil
+        mockRepository = nil
+    }
+    
+    func testLoadMessages() async throws {
+        // Given
+        let expectedMessages = [
+            Message(id: "1", content: "Test message", timestamp: Date())
+        ]
+        mockRepository.mockMessages = expectedMessages
+        
+        // When
+        await viewModel.loadMessages(conversationID: "test")
+        
+        // Then
+        XCTAssertEqual(viewModel.messages.count, 1)
+        XCTAssertEqual(viewModel.messages.first?.content, "Test message")
+        XCTAssertFalse(viewModel.isLoading)
+    }
+    
+    func testLoadMessagesError() async throws {
+        // Given
+        mockRepository.shouldFail = true
+        
+        // When
+        await viewModel.loadMessages(conversationID: "test")
+        
+        // Then
+        XCTAssertNotNil(viewModel.error)
+        XCTAssertTrue(viewModel.messages.isEmpty)
+    }
+}
+```
+
+## Mock Repositories
+
+```swift
+class MockMessageRepository: MessageRepositoryProtocol {
+    var mockMessages: [Message] = []
+    var shouldFail = false
+    
+    func fetchMessages(conversationID: String) async throws -> [Message] {
+        if shouldFail {
+            throw MessagingError.networkError(NSError(domain: "", code: -1))
+        }
+        return mockMessages
+    }
+    
+    func sendMessage(_ message: Message) async throws {
+        if shouldFail {
+            throw MessagingError.networkError(NSError(domain: "", code: -1))
+        }
+        mockMessages.append(message)
+    }
+}
+```
+
+## Test Organization
+
+```
+MessageAITests/
+├── Models/
+│   ├── UserModelTests.swift
+│   └── MessageModelTests.swift
+├── ViewModels/
+│   ├── AuthViewModelTests.swift
+│   └── ChatViewModelTests.swift
+├── Repositories/
+│   ├── UserRepositoryTests.swift
+│   └── MessageRepositoryTests.swift
+├── Integration/
+│   └── MessagingIntegrationTests.swift
+└── Mocks/
+    ├── MockUserRepository.swift
+    └── MockMessageRepository.swift
+```

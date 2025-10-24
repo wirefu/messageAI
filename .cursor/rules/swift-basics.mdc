@@ -1,0 +1,85 @@
+# Swift Basics & Code Style
+
+## General Principles
+- Write clean, readable, and maintainable Swift code
+- Follow Swift API Design Guidelines
+- Prefer composition over inheritance
+- Use protocol-oriented programming where appropriate
+- Keep functions small and single-purpose
+- Write self-documenting code with clear variable names
+
+## Async/Await & Concurrency
+
+- Use `async/await` for asynchronous operations
+- Mark ViewModels with `@MainActor` to ensure UI updates on main thread
+- Use `Task` for launching async work from sync contexts
+- Use `TaskGroup` for parallel operations
+- Handle cancellation with `Task.isCancelled`
+- Avoid `DispatchQueue.main.async` - use `@MainActor` instead
+
+```swift
+// ✅ Good
+@MainActor
+func updateUI() {
+    // Automatically on main thread
+}
+
+// ❌ Avoid
+func updateUI() {
+    DispatchQueue.main.async {
+        // Manual dispatch
+    }
+}
+```
+
+## Error Handling
+
+- Use Swift's native error handling (try/catch)
+- Create custom error types for domain-specific errors
+- Show user-friendly error messages
+- Log errors for debugging
+- Always handle Firebase errors gracefully
+
+```swift
+enum MessagingError: LocalizedError {
+    case notAuthenticated
+    case networkError(Error)
+    case invalidData
+    
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated:
+            return "Please sign in to continue"
+        case .networkError(let error):
+            return "Network error: \(error.localizedDescription)"
+        case .invalidData:
+            return "Invalid data received"
+        }
+    }
+}
+```
+
+## Documentation
+
+- Add doc comments for public APIs
+- Use `///` for documentation comments
+- Include parameter descriptions
+- Document complex logic
+- Add MARK: comments for organization
+
+```swift
+/// Sends a message to a conversation
+/// - Parameters:
+///   - message: The message to send
+///   - conversationID: The ID of the target conversation
+/// - Throws: `MessagingError` if the operation fails
+/// - Returns: The sent message with updated metadata
+func sendMessage(_ message: Message, to conversationID: String) async throws -> Message {
+    // Implementation
+}
+
+// MARK: - Private Helpers
+private func formatTimestamp(_ date: Date) -> String {
+    // Implementation
+}
+```

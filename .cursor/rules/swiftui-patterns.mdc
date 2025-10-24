@@ -1,0 +1,74 @@
+# SwiftUI Best Practices
+
+## Property Wrappers
+
+- Use `@StateObject` for view-owned objects
+- Use `@ObservedObject` for passed objects
+- Use `@EnvironmentObject` for shared app-wide state
+- Use `@State` only for view-local state
+- Use `@Binding` for two-way data flow with parent views
+
+## View Design
+
+- Prefer `ViewBuilder` for conditional view rendering
+- Extract complex views into separate components
+- Use `.task` for async operations in view lifecycle
+- Use `.refreshable` for pull-to-refresh
+
+## UI/UX Guidelines
+
+- Follow iOS Human Interface Guidelines
+- Use native SwiftUI components when possible
+- Implement smooth animations and transitions
+- Show loading states for async operations
+- Provide feedback for user actions
+- Handle empty states gracefully
+- Make text accessible with Dynamic Type support
+- Support Dark Mode
+
+```swift
+struct MessageBubbleView: View {
+    let message: Message
+    let isFromCurrentUser: Bool
+    
+    var body: some View {
+        HStack {
+            if isFromCurrentUser { Spacer() }
+            
+            Text(message.content)
+                .padding(12)
+                .background(isFromCurrentUser ? Color.blue : Color.gray.opacity(0.2))
+                .foregroundColor(isFromCurrentUser ? .white : .primary)
+                .cornerRadius(16)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge) // Accessibility
+            
+            if !isFromCurrentUser { Spacer() }
+        }
+        .padding(.horizontal)
+    }
+}
+```
+
+## Performance Optimization
+
+- Use `LazyVStack` and `LazyHStack` for large lists
+- Implement pagination for Firestore queries
+- Use `.onAppear` modifiers efficiently
+- Avoid expensive operations in view body
+- Cache images and data appropriately
+- Use `@State private` to minimize view updates
+- Profile with Instruments for bottlenecks
+
+## Common Patterns
+
+### Loading State
+```swift
+@Published var loadingState: LoadingState = .idle
+
+enum LoadingState {
+    case idle
+    case loading
+    case success
+    case failure(Error)
+}
+```
