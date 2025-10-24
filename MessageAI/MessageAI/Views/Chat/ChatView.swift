@@ -14,11 +14,16 @@ struct ChatView: View {
     let currentUserID: String
     
     @StateObject private var viewModel: ChatViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var messageText = ""
     @State private var otherUser: User?
     @State private var showingSummary = false
     @State private var currentSummary: ConversationSummary?
     @State private var isGeneratingSummary = false
+    @State private var showingAutoTriggerPrompt = false
+    
+    private let summaryRepository = SummaryRepository()
+    private let autoTriggerService = SummaryAutoTriggerService.shared
     
     init(conversation: Conversation, currentUserID: String) {
         self.conversation = conversation
@@ -112,9 +117,23 @@ struct ChatView: View {
                 SummaryView(summary: summary)
             }
         }
+        .alert("Catch Up with Summary", isPresented: $showingAutoTriggerPrompt) {
+            Button("View Summary") {
+                autoTriggerService.markAutoTriggerPromptShown(conversationID: conversation.id)
+                Task {
+                    await generateSummary()
+                }
+            }
+            Button("Read Messages", role: .cancel) {
+                autoTriggerService.markAutoTriggerPromptShown(conversationID: conversation.id)
+            }
+        } message: {
+            Text("You have \(viewModel.messages.filter { !$0.isRead }.count) unread messages. Would you like an AI summary to catch up quickly?")
+        }
         .task {
             await loadOtherUser()
             await viewModel.markMessagesAsRead()
+            checkAutoTrigger()
         }
         .onDisappear {
             viewModel.stopObserving()
@@ -139,15 +158,47 @@ struct ChatView: View {
         defer { isGeneratingSummary = false }
         
         do {
-            let summary = try await AIService.shared.summarizeConversation(
+            // Try to get cached summary first
+            if let cachedSummary = try await summaryRepository.getSummary(conversationID: conversation.id) {
+                currentSummary = cachedSummary
+                showingSummary = true
+                return
+            }
+            
+            // No cache, request new summary
+            let summary = try await summaryRepository.requestSummary(
                 conversationID: conversation.id,
-                messageCount: viewModel.messages.count
+                messageCount: min(viewModel.messages.count, 50) // Max 50 messages
             )
             currentSummary = summary
             showingSummary = true
         } catch {
             // Show error via viewModel
             viewModel.error = .aiFunctionError("Failed to generate summary")
+        }
+    }
+    
+    private func checkAutoTrigger() {
+        guard let user = authViewModel.currentUser else { return }
+        
+        // Check if auto-trigger conditions are met
+        let unreadCount = conversation.unreadCount(for: currentUserID)
+        
+        let shouldTrigger = autoTriggerService.shouldAutoTriggerSummary(
+            unreadMessageCount: unreadCount,
+            lastOnlineTimestamp: user.lastSeen,
+            conversationID: conversation.id
+        )
+        
+        let alreadyShown = autoTriggerService.hasShownAutoTriggerPrompt(
+            conversationID: conversation.id
+        )
+        
+        if shouldTrigger && !alreadyShown {
+            // Small delay to allow view to settle
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                showingAutoTriggerPrompt = true
+            }
         }
     }
 }
@@ -165,5 +216,6 @@ struct ChatView: View {
             ),
             currentUserID: "user1"
         )
+        .environmentObject(AuthViewModel())
     }
 }

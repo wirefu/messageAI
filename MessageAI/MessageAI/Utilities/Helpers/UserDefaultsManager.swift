@@ -67,6 +67,21 @@ final class UserDefaultsManager {
         guard let data = defaults.data(forKey: key) else { return nil }
         return try? JSONDecoder().decode(T.self, from: data)
     }
+    
+    /// Gets boolean value for key
+    /// - Parameter key: Storage key
+    /// - Returns: Boolean value
+    func bool(forKey key: String) -> Bool {
+        return defaults.bool(forKey: key)
+    }
+    
+    /// Sets value for key
+    /// - Parameters:
+    ///   - value: Value to set
+    ///   - key: Storage key
+    func set(_ value: Any?, forKey key: String) {
+        defaults.set(value, forKey: key)
+    }
 
     /// Removes value for specified key
     /// - Parameter key: Storage key
