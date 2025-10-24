@@ -1,3 +1,89 @@
+---
+alwaysApply: true
+---
+
+# Sweetpad & Build Commands
+
+## Build Tool Setup
+- **Build Tool**: Sweetpad for terminal-based builds
+- **Project Generator**: XcodeGen (`project.yml`)
+- **Package Manager**: Swift Package Manager (via XcodeGen)
+
+## Sweetpad Commands
+
+Use these terminal commands for building:
+
+```bash
+# Clean build
+sweetpad clean
+
+# Build project
+sweetpad build
+
+# Run on simulator
+sweetpad run
+
+# Run tests
+sweetpad test
+
+# Select device
+sweetpad device list
+sweetpad device select <device-id>
+```
+
+## NPM Scripts
+
+Project includes these convenient npm scripts:
+
+```bash
+# iOS Build Commands
+npm run build          # Build MessageAI
+npm run test           # Run tests
+npm run clean          # Clean build
+
+# XcodeGen Commands
+npm run xcode:generate # Generate Xcode project
+npm run xcode:clean    # Remove generated files
+
+# Linting
+npm run lint           # Run SwiftLint
+npm run lint:fix       # Auto-fix SwiftLint issues
+npm run lint:strict    # Strict mode (warnings as errors)
+
+# Firebase Commands
+npm run firebase:deploy        # Deploy everything
+npm run functions:deploy       # Deploy functions only
+npm run firebase:emulators     # Start local emulators
+npm run functions:logs         # View function logs
+```
+
+## XcodeGen Workflow
+
+1. Generate project from `project.yml`:
+```bash
+xcodegen generate
+```
+
+2. Build and run:
+```bash
+xcodebuild -scheme MessageAI -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
+## Debugging
+
+- Use `print()` sparingly, prefer proper logging
+- Use breakpoints effectively in Xcode
+- Use `os_log` for production logging
+- Check Firebase console for backend errors
+- Monitor Cloud Function logs with `npm run functions:logs`
+- Use Xcode's View Hierarchy debugger for UI issues
+
+## Remember
+
+- Always compile and test code changes
+- Generate Xcode project when adding new files
+- Use hot reload for rapid UI iteration
+- Build with Sweetpad or npm scripts when in Cursor
 # Sweetpad & Build Commands
 
 ## Build Tool Setup

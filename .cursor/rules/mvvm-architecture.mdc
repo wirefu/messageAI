@@ -1,3 +1,105 @@
+---
+alwaysApply: true
+---
+
+# MVVM Architecture for MessengerAI
+
+## Project Architecture
+- **Pattern**: MVVM (Model-View-ViewModel) with Repository pattern
+- **Stack**: Swift, SwiftUI, Firebase (Auth, Firestore, Functions, Storage), OpenAI API
+- **iOS Version**: iOS 16+
+
+## ViewModel Pattern
+
+Always mark ViewModels with `@MainActor` for thread safety:
+
+```swift
+@MainActor
+class MessageViewModel: ObservableObject {
+    @Published var messages: [Message] = []
+    @Published var isLoading = false
+    @Published var error: Error?
+    
+    private let messageRepository: MessageRepository
+    private var listener: ListenerRegistration?
+    
+    init(messageRepository: MessageRepository = MessageRepository()) {
+        self.messageRepository = messageRepository
+    }
+    
+    func loadMessages(conversationID: String) async {
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            messages = try await messageRepository.fetchMessages(conversationID: conversationID)
+        } catch {
+            self.error = error
+        }
+    }
+    
+    deinit {
+        listener?.remove()
+    }
+}
+```
+
+## Repository Pattern
+
+Repositories handle all data access and Firebase interactions:
+
+```swift
+protocol MessageRepositoryProtocol {
+    func fetchMessages(conversationID: String) async throws -> [Message]
+    func sendMessage(_ message: Message) async throws
+    func startListening(conversationID: String, completion: @escaping ([Message]) -> Void)
+}
+
+class MessageRepository: MessageRepositoryProtocol {
+    private let db = Firestore.firestore()
+    
+    func fetchMessages(conversationID: String) async throws -> [Message] {
+        let snapshot = try await db.collection("conversations")
+            .document(conversationID)
+            .collection("messages")
+            .order(by: "timestamp")
+            .getDocuments()
+        
+        return snapshot.documents.compactMap { try? $0.data(as: Message.self) }
+    }
+}
+```
+
+## Layer Responsibilities
+
+### Models
+- Pure data structures
+- Codable for Firebase
+- No business logic
+
+### Views
+- SwiftUI views only
+- Minimal logic
+- Observe ViewModels
+- Display data and handle user input
+
+### ViewModels
+- Business logic
+- State management
+- Coordinate between Views and Repositories
+- Always marked with `@MainActor`
+
+### Repositories
+- Data access layer
+- Firebase operations
+- Handle listeners and cleanup
+- Protocol-based for testability
+
+### Services
+- Cross-cutting concerns
+- Authentication
+- Network monitoring
+- AI operations (via Cloud Functions)
 # MVVM Architecture for MessengerAI
 
 ## Project Architecture
