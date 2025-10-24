@@ -90,7 +90,8 @@ struct ChatView: View {
                         await viewModel.sendMessage(content: textToSend)
                     }
                 },
-                isLoading: viewModel.isLoading
+                isLoading: viewModel.isLoading,
+                enableClarityCheck: true // Enable AI clarity assistant
             )
         }
         .navigationTitle(otherUser?.displayName ?? "Chat")
