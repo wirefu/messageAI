@@ -1,0 +1,102 @@
+# File Organization & Project Structure
+
+## Directory Structure
+
+```
+MessageAI/
+├── App/
+│   ├── AppDelegate.swift
+│   └── MessengerAIApp.swift
+│
+├── Models/
+│   ├── User.swift
+│   ├── Message.swift
+│   ├── Conversation.swift
+│   ├── MessageStatus.swift
+│   ├── ActionItem.swift
+│   ├── ConversationSummary.swift
+│   └── AISuggestion.swift
+│
+├── Views/
+│   ├── Auth/
+│   │   ├── LoginView.swift
+│   │   ├── SignUpView.swift
+│   │   └── AuthContainerView.swift
+│   │
+│   ├── Conversations/
+│   │   ├── ConversationListView.swift
+│   │   ├── ConversationRowView.swift
+│   │   └── NewConversationView.swift
+│   │
+│   ├── Chat/
+│   │   ├── ChatView.swift
+│   │   ├── MessageBubbleView.swift
+│   │   ├── MessageInputView.swift
+│   │   └── TypingIndicatorView.swift
+│   │
+│   ├── AI/
+│   │   ├── SummaryView.swift
+│   │   ├── ClaritySuggestionView.swift
+│   │   └── ActionItemsView.swift
+│   │
+│   └── Components/
+│       ├── LoadingView.swift
+│       ├── ErrorView.swift
+│       └── EmptyStateView.swift
+│
+├── ViewModels/
+│   ├── AuthViewModel.swift
+│   ├── ConversationListViewModel.swift
+│   ├── ChatViewModel.swift
+│   └── AIFeaturesViewModel.swift
+│
+├── Services/
+│   ├── AuthenticationService.swift
+│   ├── NetworkMonitor.swift
+│   └── AIService.swift
+│
+├── Repositories/
+│   ├── UserRepository.swift
+│   ├── ConversationRepository.swift
+│   ├── MessageRepository.swift
+│   └── ActionItemRepository.swift
+│
+└── Utilities/
+    ├── Extensions/
+    │   ├── Date+Extensions.swift
+    │   ├── String+Extensions.swift
+    │   └── View+Extensions.swift
+    │
+    ├── Helpers/
+    │   ├── UserDefaultsManager.swift
+    │   ├── KeychainManager.swift
+    │   └── DateFormatter+Shared.swift
+    │
+    └── Constants/
+        ├── FirebaseConstants.swift
+        └── AppConstants.swift
+```
+
+## File Naming Conventions
+
+- Models: `User.swift`, `Message.swift` (singular, PascalCase)
+- Views: `LoginView.swift`, `ChatView.swift` (descriptive + View suffix)
+- ViewModels: `AuthViewModel.swift`, `ChatViewModel.swift` (descriptive + ViewModel suffix)
+- Repositories: `UserRepository.swift` (singular + Repository suffix)
+- Services: `AuthenticationService.swift` (descriptive + Service suffix)
+- Extensions: `Date+Extensions.swift` (Type + Extensions)
+- Constants: `AppConstants.swift`, `FirebaseConstants.swift` (descriptive + Constants)
+
+## File Headers
+
+All Swift files should include this header:
+
+```swift
+//
+//  FileName.swift
+//  MessageAI
+//
+//  Created by Gauntlet AI Team
+//  Copyright © 2025 Gauntlet AI. All rights reserved.
+//
+```

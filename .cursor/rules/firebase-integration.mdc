@@ -1,0 +1,95 @@
+# Firebase Integration Patterns
+
+## General Firebase Rules
+
+- Always handle errors from Firebase operations
+- Use Firestore offline persistence for better UX
+- Implement proper listener cleanup in `onDisappear` or `deinit`
+- Use batched writes for multiple operations
+- Implement optimistic UI updates for better responsiveness
+- Cache Firebase data appropriately to minimize reads
+- Use security rules to enforce data access control
+
+## Offline Support
+
+```swift
+func enableOfflineMode() {
+    let settings = Firestore.firestore().settings
+    settings.isPersistenceEnabled = true
+    Firestore.firestore().settings = settings
+}
+```
+
+## Real-time Listeners
+
+Always clean up listeners to prevent memory leaks:
+
+```swift
+class MessageRepository {
+    private var listener: ListenerRegistration?
+    
+    func startListening(conversationId: String) {
+        listener = db.collection("conversations")
+            .document(conversationId)
+            .collection("messages")
+            .order(by: "timestamp")
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let documents = snapshot?.documents else { return }
+                self?.messages = documents.compactMap { try? $0.data(as: Message.self) }
+            }
+    }
+    
+    func stopListening() {
+        listener?.remove()
+        listener = nil
+    }
+    
+    deinit {
+        listener?.remove()
+    }
+}
+```
+
+## Firebase Cloud Functions
+
+- Always authenticate users before calling functions
+- Handle function errors gracefully
+- Implement retry logic for transient failures
+- Cache function results when appropriate
+- Monitor API costs (especially OpenAI)
+
+```swift
+func callSummarizeFunction(messages: [Message]) async throws -> Summary {
+    let functions = Functions.functions()
+    let data: [String: Any] = [
+        "messages": messages.map { ["senderName": $0.senderName, "content": $0.content] },
+        "conversationId": conversationId
+    ]
+    
+    let result = try await functions.httpsCallable("summarizeConversation").call(data)
+    guard let summary = result.data as? [String: Any] else {
+        throw MessagingError.invalidData
+    }
+    
+    return try Summary(from: summary)
+}
+```
+
+## AI Features (OpenAI Integration)
+
+- Call Cloud Functions for AI operations (never call OpenAI directly from client)
+- Implement debouncing for real-time AI suggestions
+- Show loading indicators during AI processing
+- Cache AI responses to reduce costs
+- Handle AI errors gracefully with fallbacks
+- Display AI-generated content clearly (distinguish from user content)
+
+## Security Best Practices
+
+- Never store API keys in client code
+- Use Firebase Security Rules for data access
+- Validate all user input
+- Sanitize user-generated content
+- Use HTTPS for all network calls
+- Implement proper authentication flow
+- Store sensitive data in Keychain

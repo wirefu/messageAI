@@ -1,0 +1,189 @@
+name: MessageAI
+options:
+  bundleIdPrefix: com.messengerai
+  deploymentTarget:
+    iOS: "16.0"
+  developmentLanguage: en
+  xcodeVersion: "15.0"
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    ENABLE_BITCODE: NO
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_EMIT_LOC_STRINGS: YES
+
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    version: 10.19.0
+  InjectionNext:
+    url: https://github.com/johnno1962/InjectionNext
+    branch: main
+  ViewInspector:
+    url: https://github.com/nalexn/ViewInspector
+    version: 0.9.10
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    version: 1.15.0
+
+targets:
+  MessageAI:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: MessageAI/MessageAI
+        excludes:
+          - "**/*.md"
+          - "**/Info.plist"
+    resources:
+      - path: MessageAI/MessageAI/Resources
+        excludes:
+          - "**/*.swift"
+    info:
+      path: MessageAI/MessageAI/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: MessengerAI
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleInfoDictionaryVersion: "6.0"
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        UIApplicationSupportsIndirectInputEvents: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    dependencies:
+      - package: Firebase
+        products:
+          - FirebaseAuth
+          - FirebaseFirestore
+          - FirebaseStorage
+          - FirebaseFunctions
+          - FirebaseAnalytics
+      - package: InjectionNext
+        products:
+          - InjectionNext
+        platforms: [iOS]
+        condition: DEBUG
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.messengerai.app
+        PRODUCT_NAME: MessageAI
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_PREVIEWS: YES
+        INFOPLIST_FILE: MessageAI/MessageAI/Resources/Info.plist
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_EMIT_LOC_STRINGS: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+      debug:
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+        SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+        OTHER_LDFLAGS:
+          - "-Xlinker"
+          - "-interposable"
+      release:
+        SWIFT_OPTIMIZATION_LEVEL: "-O"
+        SWIFT_COMPILATION_MODE: wholemodule
+    preBuildScripts:
+      - name: SwiftLint
+        script: |
+          if which swiftlint >/dev/null; then
+            swiftlint
+          else
+            echo "warning: SwiftLint not installed"
+          fi
+        basedOnDependencyAnalysis: false
+        showEnvVars: false
+    postBuildScripts:
+      - name: Copy GoogleService-Info.plist
+        script: |
+          if [ -f "${PROJECT_DIR}/GoogleService-Info.plist" ]; then
+            cp "${PROJECT_DIR}/GoogleService-Info.plist" "${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist"
+          fi
+
+  MessageAITests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - MessageAI/MessageAITests
+    dependencies:
+      - target: MessageAI
+      - package: ViewInspector
+      - package: SnapshotTesting
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.messengerai.app.tests
+        TARGETED_DEVICE_FAMILY: "1,2"
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/MessageAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MessageAI
+        GENERATE_INFOPLIST_FILE: YES
+
+  MessageAIUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - MessageAI/MessageAIUITests
+    dependencies:
+      - target: MessageAI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.messengerai.app.uitests
+        TARGETED_DEVICE_FAMILY: "1,2"
+        TEST_TARGET_NAME: MessageAI
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  MessageAI:
+    build:
+      targets:
+        MessageAI: all
+        MessageAITests: [test]
+        MessageAIUITests: [test]
+    run:
+      config: Debug
+      environmentVariables:
+        - variable: OS_ACTIVITY_MODE
+          value: disable
+          isEnabled: true
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - MessageAITests
+        - MessageAIUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+

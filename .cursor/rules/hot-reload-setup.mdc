@@ -1,0 +1,123 @@
+# Hot Reload with InjectionNext
+
+## Quick Setup
+
+1. **Install InjectionNext.app** (one-time):
+   ```bash
+   ./scripts/install-injection-next.sh
+   # OR manually: Download from https://github.com/johnno1962/InjectionNext/releases
+   ```
+
+2. **Regenerate Xcode project** (includes package + linker flags):
+   ```bash
+   npm run xcode:generate
+   ```
+
+3. **Launch InjectionNext** → **Launch Xcode from menu**
+
+4. **Build and run** → **Edit views** → **Save** → See changes instantly!
+
+## Code Requirements
+
+- Add `#if DEBUG` wrapper around injection code
+- Use `@ObserveInjection var forceRedraw` in views
+- Use `.enableInjection()` modifier on views
+- Keep InjectionNext running during development
+- Only include in DEBUG builds
+
+## Usage Pattern
+
+```swift
+import SwiftUI
+
+struct ChatView: View {
+    #if DEBUG
+    @ObserveInjection var forceRedraw
+    #endif
+    
+    @StateObject private var viewModel: ChatViewModel
+    
+    var body: some View {
+        VStack {
+            // Your view content
+            MessageListView(messages: viewModel.messages)
+            MessageInputView()
+        }
+        #if DEBUG
+        .enableInjection()
+        #endif
+    }
+}
+```
+
+## Benefits
+
+- See UI changes instantly without rebuilding
+- Maintains app state during injection
+- Dramatically speeds up UI iteration
+- Works with all SwiftUI views
+
+## Workflow
+
+1. Launch InjectionNext app
+2. Select your project directory
+3. Build and run your app in simulator
+4. Edit SwiftUI views
+5. Save (Cmd+S)
+6. See changes appear instantly in simulator
+
+## App Entry Point Setup
+
+```swift
+import SwiftUI
+import FirebaseCore
+
+@main
+struct MessengerAIApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    
+    #if DEBUG
+    init() {
+        // Load InjectionNext bundle for hot reload
+        if let path = Bundle.main.path(forResource: "iOSInjection", ofType: "bundle") {
+            Bundle(path: path)?.load()
+        }
+    }
+    #endif
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+## Menu Bar Icon Colors
+
+- 🔵 Blue - InjectionNext running
+- 🟣 Purple - Xcode launched from InjectionNext
+- 🟠 Orange - App connected, ready to inject
+- 🟢 Green - Compiling your changes
+- 🟡 Yellow - Compilation failed
+
+## What Can Be Injected
+
+✅ Can inject:
+- SwiftUI view body changes
+- Function implementations
+- Layout, colors, fonts
+- UI logic changes
+
+❌ Cannot inject:
+- Adding/removing properties
+- Changing property types
+- Adding/reordering methods
+- Changing function signatures
+
+## Troubleshooting
+
+- **Not connecting?** Launch Xcode from InjectionNext menu
+- **No changes?** Check icon is orange, save file (Cmd+S)
+- **Yellow icon?** Check Console.app for compilation errors
+- **Still issues?** See full guide: `.doc/INJECTION-NEXT-SETUP.md`
