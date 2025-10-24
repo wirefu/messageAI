@@ -10,6 +10,10 @@ import SwiftUI
 
 /// Individual message bubble view
 struct MessageBubbleView: View {
+    #if DEBUG
+    @ObserveInjection var forceRedraw
+    #endif
+    
     let message: Message
     let isFromCurrentUser: Bool
     
@@ -43,6 +47,9 @@ struct MessageBubbleView: View {
         }
         .padding(.horizontal, AppConstants.UIConfig.standardSpacing)
         .padding(.vertical, 4)
+        #if DEBUG
+        .enableInjection()
+        #endif
     }
     
     @ViewBuilder
