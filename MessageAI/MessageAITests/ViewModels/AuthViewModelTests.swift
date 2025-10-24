@@ -88,5 +88,12 @@ class MockUserRepository: UserRepositoryProtocol {
             throw AppError.firestoreError("Mock error")
         }
     }
+    
+    func getAllUsers(excludingUserID: String) async throws -> [User] {
+        if shouldFail {
+            throw AppError.firestoreError("Mock error")
+        }
+        return Array(mockUsers.values).filter { $0.id != excludingUserID }
+    }
 }
 

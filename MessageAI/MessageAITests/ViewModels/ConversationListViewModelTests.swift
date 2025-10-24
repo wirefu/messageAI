@@ -122,5 +122,12 @@ class MockConversationRepository: ConversationRepositoryProtocol {
             throw AppError.firestoreError("Mock error")
         }
     }
+    
+    func deleteConversation(id: String) async throws {
+        if shouldFail {
+            throw AppError.firestoreError("Mock error")
+        }
+        mockConversations.removeAll { $0.id == id }
+    }
 }
 

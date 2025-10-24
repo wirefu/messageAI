@@ -92,5 +92,12 @@ class MockMessageRepository: MessageRepositoryProtocol {
             throw AppError.firestoreError("Mock error")
         }
     }
+    
+    func deleteMessage(messageID: String, conversationID: String) async throws {
+        if shouldFail {
+            throw AppError.firestoreError("Mock error")
+        }
+        mockMessages.removeAll { $0.id == messageID }
+    }
 }
 
