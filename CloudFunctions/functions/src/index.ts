@@ -21,18 +21,8 @@ export const summarizeConversation = functions.https.onCall(async (data, context
   }
 
   try {
-    // Fetch messages from Firestore
-    const messagesSnapshot = await admin.firestore()
-      .collection('conversations')
-      .doc(conversationID)
-      .collection('messages')
-      .orderBy('timestamp', 'desc')
-      .limit(messageCount || 20)
-      .get();
-
-    // For emulator: Return mock summary
-    // In production: Would fetch and analyze messages with OpenAI
-    // const messages = messagesSnapshot.docs.map(...)
+    // For emulator: Return mock AI summary
+    // In production: Would fetch messages and call OpenAI API
     const summary = {
       conversationID,
       keyPoints: [
