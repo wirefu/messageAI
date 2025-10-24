@@ -15,9 +15,19 @@ final class AIService {
     
     static let shared = AIService()
     
-    private let functions = Functions.functions()
+    private let functions: Functions
     
-    private init() {}
+    private init() {
+        // Always use production Cloud Functions (even in debug/emulator)
+        // Auth and Firestore use emulator, but Functions use production
+        functions = Functions.functions()
+        
+        #if DEBUG
+        // Note: Using PRODUCTION functions for AI (OpenAI key configured there)
+        // Auth & Firestore still use emulator
+        print("🤖 AIService: Using PRODUCTION Cloud Functions")
+        #endif
+    }
     
     // MARK: - Summarization
     
