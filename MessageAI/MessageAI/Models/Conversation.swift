@@ -68,10 +68,19 @@ extension Conversation {
         guard let data = document.data() else { return nil }
 
         var lastMessage: Message?
-        if let messageData = data[FirebaseConstants.ConversationFields.lastMessage] as? [String: Any],
-           let messageJSON = try? JSONSerialization.data(withJSONObject: messageData),
-           let decoded = try? JSONDecoder().decode(Message.self, from: messageJSON) {
-            lastMessage = decoded
+        if let messageData = data[FirebaseConstants.ConversationFields.lastMessage] as? [String: Any] {
+            // Manually parse the message to handle Firestore Timestamps
+            lastMessage = Message(
+                id: messageData[FirebaseConstants.MessageFields.id] as? String ?? "",
+                conversationID: messageData[FirebaseConstants.MessageFields.conversationID] as? String ?? "",
+                senderID: messageData[FirebaseConstants.MessageFields.senderID] as? String ?? "",
+                content: messageData[FirebaseConstants.MessageFields.content] as? String ?? "",
+                timestamp: (messageData[FirebaseConstants.MessageFields.timestamp] as? Timestamp)?.dateValue() ?? Date(),
+                deliveredAt: (messageData[FirebaseConstants.MessageFields.deliveredAt] as? Timestamp)?.dateValue(),
+                readAt: (messageData[FirebaseConstants.MessageFields.readAt] as? Timestamp)?.dateValue(),
+                status: MessageStatus(rawValue: messageData[FirebaseConstants.MessageFields.status] as? String ?? "") ?? .sending,
+                aiSuggestions: nil
+            )
         }
 
         return Conversation(

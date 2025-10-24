@@ -18,6 +18,9 @@ struct NewConversationView: View {
     @State private var searchText = ""
     @State private var availableUsers: [User] = []
     @State private var isLoading = false
+    @State private var errorMessage: String?
+    
+    private let userRepository = UserRepository()
     
     var body: some View {
         NavigationView {
@@ -122,7 +125,13 @@ struct NewConversationView: View {
     private func loadUsers() async {
         isLoading = true
         defer { isLoading = false }
-        availableUsers = []
+        
+        do {
+            availableUsers = try await userRepository.getAllUsers(excludingUserID: currentUserID)
+        } catch {
+            errorMessage = "Failed to load users: \(error.localizedDescription)"
+            availableUsers = []
+        }
     }
     
     private func createConversation(with user: User) async {

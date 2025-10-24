@@ -17,6 +17,7 @@ protocol UserRepositoryProtocol {
     func observeUser(id: String, completion: @escaping (User?) -> Void)
     func setOnlineStatus(userID: String, isOnline: Bool) async throws
     func updateLastSeen(userID: String) async throws
+    func getAllUsers(excludingUserID: String) async throws -> [User]
 }
 
 /// Repository for user data operations with Firestore
@@ -134,6 +135,25 @@ final class UserRepository: UserRepositoryProtocol {
                 ])
         } catch {
             throw AppError.firestoreError("Failed to update last seen: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - Query
+    
+    /// Fetches all users except the specified user
+    /// - Parameter excludingUserID: User ID to exclude
+    /// - Returns: Array of users
+    /// - Throws: AppError if fetch fails
+    func getAllUsers(excludingUserID: String) async throws -> [User] {
+        do {
+            let snapshot = try await db.collection(FirebaseConstants.usersCollection)
+                .getDocuments()
+            
+            return snapshot.documents
+                .compactMap { User.from(document: $0) }
+                .filter { $0.id != excludingUserID }
+        } catch {
+            throw AppError.firestoreError("Failed to fetch users: \(error.localizedDescription)")
         }
     }
     
