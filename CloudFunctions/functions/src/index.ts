@@ -61,7 +61,9 @@ export const summarizeConversation = functions.https.onCall(async (data, context
     }).join('\n');
     
     console.log(`📨 Summarizing ${messagesSnapshot.docs.length} messages`);
-    console.log(`💬 Conversation preview:\n${messageTexts.substring(0, 200)}...`);
+    console.log(`💬 Full conversation being sent to GPT-4:`);
+    console.log(messageTexts);
+    console.log(`--- End of conversation ---`);
 
     // Call OpenAI GPT-4 for summarization
     const completion = await openai.chat.completions.create({
@@ -69,26 +71,28 @@ export const summarizeConversation = functions.https.onCall(async (data, context
       messages: [
         {
           role: 'system',
-          content: `You are a professional conversation summarizer for a messaging app.
+          content: `You are a conversation summarizer for a messaging app.
 
-Analyze the ENTIRE conversation provided and extract:
-1. Key Points - main topics discussed across ALL messages
-2. Decisions Made - any agreements or conclusions reached
-3. Action Items - commitments with who/when if mentioned  
-4. Open Questions - unresolved questions
+Analyze the COMPLETE conversation chronologically. Look at the FLOW of the discussion - how the conversation progresses from start to finish.
 
-IMPORTANT: Summarize the COMPLETE conversation, not just one message.
-Give equal weight to all messages in the conversation.
+DO NOT focus only on the longest message. Treat short messages and long messages equally.
+The RECENT messages and conversational back-and-forth are often more important than a single long message.
 
-Return ONLY valid JSON (no markdown, no code blocks):
+Extract:
+1. Key Points - What are they actually talking about? (look at ALL messages, especially recent ones)
+2. Decisions Made - What did they agree on or decide?
+3. Action Items - What needs to be done? Who will do it?
+4. Open Questions - What's unresolved?
+
+Return ONLY valid JSON (no markdown):
 {
-  "keyPoints": ["point1", "point2"],
+  "keyPoints": ["topic1", "topic2"],
   "decisions": ["decision1"],
   "actionItems": ["action1"],
   "openQuestions": ["question1"]
 }
 
-Be concise. Focus on the actual conversation topics.`,
+Focus on the conversation's PURPOSE and OUTCOME, not just the first or longest message.`,
         },
         {
           role: 'user',
