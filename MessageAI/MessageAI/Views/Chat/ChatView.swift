@@ -47,6 +47,15 @@ struct ChatView: View {
                                     isFromCurrentUser: message.isFromCurrentUser(currentUserID)
                                 )
                                 .id(message.id)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        Task {
+                                            await viewModel.deleteMessage(message)
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
                             }
                         }
                     }

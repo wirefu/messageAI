@@ -242,6 +242,23 @@ final class ChatViewModel: ObservableObject {
         }
     }
     
+    /// Deletes a message from the conversation
+    /// - Parameter message: Message to delete
+    func deleteMessage(_ message: Message) async {
+        // Optimistic UI update - remove immediately
+        messages.removeAll { $0.id == message.id }
+        
+        do {
+            try await messageRepository.deleteMessage(
+                messageID: message.id,
+                conversationID: conversationID
+            )
+        } catch {
+            // On error, reload messages
+            await loadInitialMessages()
+        }
+    }
+    
     /// Clears error state
     func clearError() {
         error = nil

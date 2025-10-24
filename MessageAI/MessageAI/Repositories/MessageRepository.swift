@@ -20,6 +20,7 @@ protocol MessageRepositoryProtocol {
     ) async throws -> (messages: [Message], lastDocument: DocumentSnapshot?)
     func updateMessageStatus(messageID: String, conversationID: String, status: MessageStatus) async throws
     func markAsRead(messageIDs: [String], conversationID: String) async throws
+    func deleteMessage(messageID: String, conversationID: String) async throws
 }
 
 /// Repository for message data operations with Firestore
@@ -184,6 +185,19 @@ final class MessageRepository: MessageRepositoryProtocol {
             try await batch.commit()
         } catch {
             throw AppError.firestoreError("Failed to mark messages as read: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Deletes a message from a conversation
+    func deleteMessage(messageID: String, conversationID: String) async throws {
+        do {
+            try await db.collection(FirebaseConstants.conversationsCollection)
+                .document(conversationID)
+                .collection(FirebaseConstants.messagesSubcollection)
+                .document(messageID)
+                .delete()
+        } catch {
+            throw AppError.firestoreError("Failed to delete message: \(error.localizedDescription)")
         }
     }
     
