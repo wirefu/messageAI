@@ -18,15 +18,16 @@ final class AIService {
     private let functions: Functions
     
     private init() {
-        // TESTING PRODUCTION AI: Use deployed Cloud Functions with OpenAI
+        #if DEBUG
+        // Use local emulator for Cloud Functions in debug mode
+        functions = Functions.functions()
+        functions.useEmulator(withHost: "localhost", port: 5001)
+        print("🤖 AIService: Using LOCAL Cloud Functions Emulator (mock AI)")
+        #else
+        // Production: Use deployed Cloud Functions
         functions = Functions.functions()
         print("🤖 AIService: Using PRODUCTION Cloud Functions (Real GPT-4!)")
-        
-        // For local development with emulator, uncomment:
-        // #if DEBUG
-        // functions.useEmulator(withHost: "localhost", port: 5001)
-        // print("🤖 AIService: Using LOCAL emulator")
-        // #endif
+        #endif
     }
     
     // MARK: - Summarization
