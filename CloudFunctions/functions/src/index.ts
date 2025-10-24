@@ -59,6 +59,9 @@ export const summarizeConversation = functions.https.onCall(async (data, context
       const userName = userNames[msgData.senderID] || 'User';
       return `${userName}: ${msgData.content}`;
     }).join('\n');
+    
+    console.log(`📨 Summarizing ${messagesSnapshot.docs.length} messages`);
+    console.log(`💬 Conversation preview:\n${messageTexts.substring(0, 200)}...`);
 
     // Call OpenAI GPT-4 for summarization
     const completion = await openai.chat.completions.create({
@@ -66,14 +69,18 @@ export const summarizeConversation = functions.https.onCall(async (data, context
       messages: [
         {
           role: 'system',
-          content: `You are a professional conversation summarizer for a remote team messaging app.
-Analyze the conversation and extract:
-1. Key Points - main topics and important information discussed
-2. Decisions Made - agreements, choices, and conclusions reached
-3. Action Items - tasks committed to, with assignees and deadlines if mentioned
-4. Open Questions - unresolved items needing discussion
+          content: `You are a professional conversation summarizer for a messaging app.
 
-Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
+Analyze the ENTIRE conversation provided and extract:
+1. Key Points - main topics discussed across ALL messages
+2. Decisions Made - any agreements or conclusions reached
+3. Action Items - commitments with who/when if mentioned  
+4. Open Questions - unresolved questions
+
+IMPORTANT: Summarize the COMPLETE conversation, not just one message.
+Give equal weight to all messages in the conversation.
+
+Return ONLY valid JSON (no markdown, no code blocks):
 {
   "keyPoints": ["point1", "point2"],
   "decisions": ["decision1"],
@@ -81,7 +88,7 @@ Return ONLY valid JSON (no markdown, no code blocks) in this exact structure:
   "openQuestions": ["question1"]
 }
 
-Be concise. Each item should be one clear sentence.`,
+Be concise. Focus on the actual conversation topics.`,
         },
         {
           role: 'user',
