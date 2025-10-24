@@ -67,9 +67,10 @@ struct ChatView: View {
             MessageInputView(
                 messageText: $messageText,
                 onSend: {
+                    let textToSend = messageText
+                    messageText = "" // Clear immediately
                     Task {
-                        await viewModel.sendMessage(content: messageText)
-                        messageText = ""
+                        await viewModel.sendMessage(content: textToSend)
                     }
                 },
                 isLoading: viewModel.isLoading

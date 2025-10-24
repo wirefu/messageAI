@@ -115,6 +115,9 @@ final class ChatViewModel: ObservableObject {
         messageRepository.observeMessages(conversationID: conversationID) { [weak self] messages in
             Task { @MainActor in
                 self?.messages = messages
+                
+                // Automatically mark received messages as read when they arrive
+                await self?.markMessagesAsRead()
             }
         }
     }
@@ -158,9 +161,18 @@ final class ChatViewModel: ObservableObject {
         do {
             try await messageRepository.sendMessage(message, to: conversationID)
             
-            // Update status to sent
+            // Update status to sent, then delivered (optimistic)
             if let index = messages.firstIndex(where: { $0.id == message.id }) {
                 messages[index].status = .sent
+                
+                // Auto-update to delivered after a brief delay (recipient will get it via listener)
+                Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
+                    if let idx = self.messages.firstIndex(where: { $0.id == message.id }) {
+                        self.messages[idx].status = .delivered
+                        self.messages[idx].deliveredAt = Date()
+                    }
+                }
             }
         } catch let appError as AppError {
             error = appError
