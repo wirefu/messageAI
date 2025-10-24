@@ -92,7 +92,8 @@ struct ChatView: View {
                     }
                 },
                 isLoading: viewModel.isLoading,
-                enableClarityCheck: true // Enable AI clarity assistant
+                enableClarityCheck: true, // Enable AI clarity assistant
+                enableToneAnalysis: true  // Enable tone analysis
             )
         }
         .navigationTitle(otherUser?.displayName ?? "Chat")

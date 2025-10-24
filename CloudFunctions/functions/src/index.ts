@@ -269,3 +269,6 @@ If no action items found, return empty array.`,
   }
 });
 
+// Export tone analysis function
+export { analyzeTone } from './toneAnalysis';
+
