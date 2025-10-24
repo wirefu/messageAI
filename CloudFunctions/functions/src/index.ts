@@ -14,7 +14,7 @@ export const summarizeConversation = functions.https.onCall(async (data, context
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
   }
 
-  const { conversationID, messageCount } = data;
+  const { conversationID } = data;
 
   if (!conversationID) {
     throw new functions.https.HttpsError('invalid-argument', 'conversationID required');
@@ -22,7 +22,7 @@ export const summarizeConversation = functions.https.onCall(async (data, context
 
   try {
     // For emulator: Return mock AI summary
-    // In production: Would fetch messages and call OpenAI API
+    // In production: Would fetch messages (data.messageCount) and call OpenAI API
     const summary = {
       conversationID,
       keyPoints: [
