@@ -311,3 +311,9 @@ INFO: Detected HTTP/2 connection.
 [debug] [2025-10-24T15:44:22.298Z] Oct 24, 2025 8:44:22 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
 INFO: Detected HTTP/2 connection.
  {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 24, 2025 8:44:22 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-10-24T15:44:54.518Z] Oct 24, 2025 8:44:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 24, 2025 8:44:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-10-24T15:44:57.899Z] Oct 24, 2025 8:44:57 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 24, 2025 8:44:57 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}

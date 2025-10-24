@@ -114,10 +114,27 @@ final class ChatViewModel: ObservableObject {
     private func startObserving() {
         messageRepository.observeMessages(conversationID: conversationID) { [weak self] messages in
             Task { @MainActor in
-                self?.messages = messages
+                guard let self = self else { return }
+                
+                // Update messages from Firestore
+                self.messages = messages
+                
+                // Mark messages from other users as delivered (this device received them)
+                let receivedMessages = messages.filter { 
+                    !$0.isFromCurrentUser(self.currentUserID) && 
+                    $0.status == .sent 
+                }
+                
+                for message in receivedMessages {
+                    try? await self.messageRepository.updateMessageStatus(
+                        messageID: message.id,
+                        conversationID: self.conversationID,
+                        status: .delivered
+                    )
+                }
                 
                 // Automatically mark received messages as read when they arrive
-                await self?.markMessagesAsRead()
+                await self.markMessagesAsRead()
             }
         }
     }
@@ -161,18 +178,9 @@ final class ChatViewModel: ObservableObject {
         do {
             try await messageRepository.sendMessage(message, to: conversationID)
             
-            // Update status to sent, then delivered (optimistic)
+            // Update status to sent (stays grey until actually delivered)
             if let index = messages.firstIndex(where: { $0.id == message.id }) {
                 messages[index].status = .sent
-                
-                // Auto-update to delivered after a brief delay (recipient will get it via listener)
-                Task {
-                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 second
-                    if let idx = self.messages.firstIndex(where: { $0.id == message.id }) {
-                        self.messages[idx].status = .delivered
-                        self.messages[idx].deliveredAt = Date()
-                    }
-                }
             }
         } catch let appError as AppError {
             error = appError
