@@ -13,7 +13,11 @@ import FirebaseFirestore
 protocol MessageRepositoryProtocol {
     func sendMessage(_ message: Message, to conversationID: String) async throws
     func observeMessages(conversationID: String, completion: @escaping ([Message]) -> Void)
-    func getMessagesPaginated(conversationID: String, limit: Int, lastDocument: DocumentSnapshot?) async throws -> (messages: [Message], lastDocument: DocumentSnapshot?)
+    func getMessagesPaginated(
+        conversationID: String,
+        limit: Int,
+        lastDocument: DocumentSnapshot?
+    ) async throws -> (messages: [Message], lastDocument: DocumentSnapshot?)
     func updateMessageStatus(messageID: String, conversationID: String, status: MessageStatus) async throws
     func markAsRead(messageIDs: [String], conversationID: String) async throws
 }
