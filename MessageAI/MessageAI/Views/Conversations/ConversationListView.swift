@@ -67,8 +67,10 @@ struct ConversationListView: View {
         List {
             ForEach(viewModel.conversations) { conversation in
                 NavigationLink {
-                    Text("Chat view - Coming in PR #8-10")
-                        .font(.title)
+                    ChatView(
+                        conversation: conversation,
+                        currentUserID: authViewModel.currentUser?.id ?? ""
+                    )
                 } label: {
                     ConversationRowView(
                         conversation: conversation,
