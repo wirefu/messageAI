@@ -26,6 +26,7 @@ final class ChatViewModel: ObservableObject {
     private let conversationRepository: ConversationRepositoryProtocol
     private let currentUserID: String
     private let conversationID: String
+    private let networkMonitor = NetworkMonitor.shared
     
     private var lastDocument: DocumentSnapshot?
     private var hasMoreMessages = true
@@ -47,6 +48,7 @@ final class ChatViewModel: ObservableObject {
             await loadConversation()
             await loadInitialMessages()
             startObserving()
+            observeNetworkChanges()
         }
     }
     
@@ -202,6 +204,24 @@ final class ChatViewModel: ObservableObject {
     }
     
     // MARK: - Cleanup
+    
+    // MARK: - Network Handling
+    
+    /// Observes network changes and processes queue when online
+    private func observeNetworkChanges() {
+        // When network comes back online, process offline queue
+        Task {
+            for await _ in NotificationCenter.default.notifications(
+                named: NSNotification.Name(AppConstants.Notifications.networkStatusChanged)
+            ) {
+                if networkMonitor.isConnected {
+                    if let repo = messageRepository as? MessageRepository {
+                        await repo.processOfflineQueue()
+                    }
+                }
+            }
+        }
+    }
     
     deinit {
         stopObserving()
