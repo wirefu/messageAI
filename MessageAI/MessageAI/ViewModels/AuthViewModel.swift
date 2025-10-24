@@ -33,8 +33,11 @@ final class AuthViewModel: ObservableObject {
         self.authService = authService
         self.userRepository = userRepository
         
-        Task {
-            await checkAuthState()
+        // Only check auth state if we actually have a current user
+        if authService.isAuthenticated {
+            Task {
+                await checkAuthState()
+            }
         }
     }
     
