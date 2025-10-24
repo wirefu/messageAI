@@ -173,28 +173,52 @@ final class ChatViewModel: ObservableObject {
         }
     }
     
-    /// Marks messages as read
+    /// Marks messages as read and updates status
     func markMessagesAsRead() async {
+        // Mark unread messages as read
         let unreadMessages = messages.filter { !$0.isRead && !$0.isFromCurrentUser(currentUserID) }
         let messageIDs = unreadMessages.map { $0.id }
         
-        guard !messageIDs.isEmpty else { return }
-        
-        do {
-            try await messageRepository.markAsRead(messageIDs: messageIDs, conversationID: conversationID)
-            
-            // Update UI
-            for id in messageIDs {
-                if let index = messages.firstIndex(where: { $0.id == id }) {
-                    messages[index].status = .read
-                    messages[index].readAt = Date()
+        if !messageIDs.isEmpty {
+            do {
+                try await messageRepository.markAsRead(messageIDs: messageIDs, conversationID: conversationID)
+                
+                // Update UI
+                for id in messageIDs {
+                    if let index = messages.firstIndex(where: { $0.id == id }) {
+                        messages[index].status = .read
+                        messages[index].readAt = Date()
+                    }
                 }
+                
+                // Reset unread count
+                try await conversationRepository.resetUnreadCount(conversationID: conversationID, userID: currentUserID)
+            } catch {
+                // Silent fail - not critical
             }
-            
-            // Reset unread count in conversation
-            try await conversationRepository.resetUnreadCount(conversationID: conversationID, userID: currentUserID)
-        } catch {
-            // Silent fail - not critical
+        }
+        
+        // Update status of sent messages to delivered (when recipient is online)
+        let sentMessages = messages.filter { 
+            $0.isFromCurrentUser(currentUserID) && 
+            $0.status == .sent 
+        }
+        
+        for message in sentMessages {
+            do {
+                try await messageRepository.updateMessageStatus(
+                    messageID: message.id,
+                    conversationID: conversationID,
+                    status: .delivered
+                )
+                
+                if let index = messages.firstIndex(where: { $0.id == message.id }) {
+                    messages[index].status = .delivered
+                    messages[index].deliveredAt = Date()
+                }
+            } catch {
+                // Silent fail
+            }
         }
     }
     
@@ -209,15 +233,19 @@ final class ChatViewModel: ObservableObject {
     
     /// Observes network changes and processes queue when online
     private func observeNetworkChanges() {
-        // When network comes back online, process offline queue
+        // When network comes back online, process offline queue and update message status
         Task {
             for await _ in NotificationCenter.default.notifications(
                 named: NSNotification.Name(AppConstants.Notifications.networkStatusChanged)
             ) {
                 if networkMonitor.isConnected {
+                    // Process any queued messages
                     if let repo = messageRepository as? MessageRepository {
                         await repo.processOfflineQueue()
                     }
+                    
+                    // Update message statuses (sent → delivered when recipient comes online)
+                    await markMessagesAsRead()
                 }
             }
         }
