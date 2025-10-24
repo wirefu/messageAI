@@ -49,23 +49,28 @@ struct MessageBubbleView: View {
     private var statusIcon: some View {
         switch message.status {
         case .sending:
+            // Sending: Clock icon
             Image(systemName: "clock")
                 .font(.caption2)
                 .foregroundColor(.secondary)
         case .sent:
-            Image(systemName: "checkmark")
+            // Sent but not delivered: Grey envelope (closed)
+            Image(systemName: "envelope.fill")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(.gray)
         case .delivered:
-            Image(systemName: "checkmark.circle")
+            // Delivered to device: Green envelope (closed)
+            Image(systemName: "envelope.fill")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(.green)
         case .read:
-            Image(systemName: "checkmark.circle.fill")
+            // Read by recipient: Open envelope (green)
+            Image(systemName: "envelope.open.fill")
                 .font(.caption2)
-                .foregroundColor(.blue)
+                .foregroundColor(.green)
         case .failed:
-            Image(systemName: "exclamationmark.circle")
+            // Failed: Red exclamation
+            Image(systemName: "exclamationmark.circle.fill")
                 .font(.caption2)
                 .foregroundColor(.red)
         }
