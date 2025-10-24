@@ -39,8 +39,7 @@ struct ContentView: View {
                 Text("Authenticated! (Conversation List coming in PR #7)")
                     .font(.title)
             } else {
-                Text("Login Screen (Coming in PR #5)")
-                    .font(.title)
+                AuthContainerView()
             }
         }
     }
