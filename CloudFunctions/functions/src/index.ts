@@ -290,3 +290,15 @@ export {
   validateAWSCredentials 
 } from './bedrockConfig';
 
+// Export AI Chat Interface
+export {
+  aiChatInterface,
+  executeAIChatAction,
+  getAIChatSuggestions,
+  searchAIConversations,
+  getAIUsageStats,
+  indexMessageForAI,
+  getAIChatHistory,
+  clearAIChatSession
+} from './aiChatInterface';
+
