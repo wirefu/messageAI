@@ -147,5 +147,6 @@ enum AIConstants {
     static let highContrastMode = Color.primary
     
     /// Dynamic type support
-    static let dynamicTypeRange = Font.TextStyle.caption1...Font.TextStyle.largeTitle
+    // Note: Font.TextStyle doesn't conform to Comparable, so we can't use range syntax
+    // static let dynamicTypeRange = Font.TextStyle.caption...Font.TextStyle.largeTitle
 }

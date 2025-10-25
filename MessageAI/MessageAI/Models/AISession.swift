@@ -62,10 +62,33 @@ extension AISession {
         guard let data = document.data() else { return nil }
         
         let messagesData = data[FirebaseConstants.AISessionFields.messages] as? [[String: Any]] ?? []
-        let messages = messagesData.compactMap { messageData in
-            // Create a mock document for each message
-            let mockDocument = MockDocumentSnapshot(documentID: messageData["id"] as? String ?? "", data: messageData)
-            return AIMessage.from(document: mockDocument)
+        let messages: [AIMessage] = messagesData.compactMap { messageData -> AIMessage? in
+            // Create AIMessage directly from data instead of using mock document
+            guard let id = messageData["id"] as? String,
+                  let content = messageData["content"] as? String,
+                  let timestamp = messageData["timestamp"] as? Date else {
+                return nil
+            }
+            
+            let role = AIMessageRole(rawValue: messageData["role"] as? String ?? "user") ?? .user
+            let sources = messageData["sources"] as? [[String: Any]] ?? []
+            let messageSources = sources.compactMap { sourceData -> MessageSource? in
+                guard let title = sourceData["title"] as? String else { return nil }
+                return MessageSource(
+                    type: sourceData["type"] as? String ?? "document",
+                    id: sourceData["id"] as? String ?? UUID().uuidString,
+                    title: title,
+                    relevance: sourceData["relevance"] as? Double
+                )
+            }
+            
+            return AIMessage(
+                id: id,
+                role: role,
+                content: content,
+                timestamp: timestamp,
+                sources: messageSources.isEmpty ? nil : messageSources
+            )
         }
         
         return AISession(

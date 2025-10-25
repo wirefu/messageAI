@@ -75,6 +75,9 @@ enum FirebaseConstants {
         static let readAt = "readAt"
         static let status = "status"
         static let aiSuggestions = "aiSuggestions"
+        static let isAIGenerated = "isAIGenerated"
+        static let aiSources = "aiSources"
+        static let aiMetadata = "aiMetadata"
     }
 
     // MARK: - Action Item Fields

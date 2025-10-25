@@ -21,6 +21,11 @@ protocol MessageRepositoryProtocol {
     func updateMessageStatus(messageID: String, conversationID: String, status: MessageStatus) async throws
     func markAsRead(messageIDs: [String], conversationID: String) async throws
     func deleteMessage(messageID: String, conversationID: String) async throws
+    
+    // MARK: - AI Methods
+    func sendAIMessage(_ message: Message, to conversationID: String) async throws
+    func getAIContext(for conversationID: String, limit: Int) async throws -> [Message]
+    func searchMessages(query: String, in conversationID: String) async throws -> [Message]
 }
 
 /// Repository for message data operations with Firestore
@@ -198,6 +203,71 @@ final class MessageRepository: MessageRepositoryProtocol {
                 .delete()
         } catch {
             throw AppError.firestoreError("Failed to delete message: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - AI Methods
+    
+    /// Sends an AI-generated message to a conversation
+    func sendAIMessage(_ message: Message, to conversationID: String) async throws {
+        // If offline, queue the message
+        guard networkMonitor.isConnected else {
+            offlineQueue.enqueue(message)
+            throw AppError.networkUnavailable
+        }
+        
+        do {
+            // Save AI message with special handling
+            try await db.collection(FirebaseConstants.conversationsCollection)
+                .document(conversationID)
+                .collection(FirebaseConstants.messagesSubcollection)
+                .document(message.id)
+                .setData(message.toFirestore())
+            
+            // Update conversation's last message
+            try await db.collection(FirebaseConstants.conversationsCollection)
+                .document(conversationID)
+                .updateData([
+                    FirebaseConstants.ConversationFields.lastMessage: message.content,
+                    FirebaseConstants.ConversationFields.lastMessageTimestamp: Timestamp(date: message.timestamp)
+                ])
+        } catch {
+            throw AppError.firestoreError("Failed to send AI message: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Gets recent messages for AI context
+    func getAIContext(for conversationID: String, limit: Int = 10) async throws -> [Message] {
+        do {
+            let snapshot = try await db.collection(FirebaseConstants.conversationsCollection)
+                .document(conversationID)
+                .collection(FirebaseConstants.messagesSubcollection)
+                .order(by: FirebaseConstants.MessageFields.timestamp, descending: true)
+                .limit(to: limit)
+                .getDocuments()
+            
+            return snapshot.documents.compactMap { Message.from(document: $0) }
+        } catch {
+            throw AppError.firestoreError("Failed to get AI context: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Searches messages in a conversation (for RAG)
+    func searchMessages(query: String, in conversationID: String) async throws -> [Message] {
+        do {
+            // This is a basic implementation - in production, you'd use vector search
+            let snapshot = try await db.collection(FirebaseConstants.conversationsCollection)
+                .document(conversationID)
+                .collection(FirebaseConstants.messagesSubcollection)
+                .whereField(FirebaseConstants.MessageFields.content, isGreaterThanOrEqualTo: query)
+                .whereField(FirebaseConstants.MessageFields.content, isLessThan: query + "\u{f8ff}")
+                .order(by: FirebaseConstants.MessageFields.timestamp, descending: true)
+                .limit(to: 20)
+                .getDocuments()
+            
+            return snapshot.documents.compactMap { Message.from(document: $0) }
+        } catch {
+            throw AppError.firestoreError("Failed to search messages: \(error.localizedDescription)")
         }
     }
     
