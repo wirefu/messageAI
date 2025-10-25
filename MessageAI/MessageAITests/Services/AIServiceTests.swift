@@ -28,6 +28,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertNotNil(sut)
     }
     
+    @MainActor
     func testAIServiceIsSingleton() {
         let instance1 = AIService.shared
         let instance2 = AIService.shared
@@ -36,6 +37,7 @@ final class AIServiceTests: XCTestCase {
     
     // MARK: - Summary Response Parsing Tests
     
+    @MainActor
     func testParseSummaryResponse_ValidData() throws {
         // Given
         let response: [String: Any] = [
@@ -60,6 +62,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertNotNil(summary.createdAt)
     }
     
+    @MainActor
     func testParseSummaryResponse_EmptyArrays() throws {
         // Given
         let response: [String: Any] = [
@@ -81,6 +84,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertTrue(summary.openQuestions.isEmpty)
     }
     
+    @MainActor
     func testParseSummaryResponse_MissingFields() throws {
         // Given - minimal response with missing optional fields
         let response: [String: Any] = [:]
@@ -98,6 +102,7 @@ final class AIServiceTests: XCTestCase {
     
     // MARK: - Clarity Response Parsing Tests
     
+    @MainActor
     func testParseClarityResponse_ValidData() throws {
         // Given
         let response: [String: Any] = [
@@ -117,6 +122,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertEqual(suggestion.alternativePhrasing, "Try saying it this way...")
     }
     
+    @MainActor
     func testParseClarityResponse_NoIssuesFound() throws {
         // Given
         let response: [String: Any] = [:]
@@ -131,6 +137,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertNil(suggestion.alternativePhrasing)
     }
     
+    @MainActor
     func testParseClarityResponse_PartialData() throws {
         // Given
         let response: [String: Any] = [
@@ -150,6 +157,7 @@ final class AIServiceTests: XCTestCase {
     
     // MARK: - Action Items Parsing Tests
     
+    @MainActor
     func testParseActionItems_ValidData() throws {
         // Given
         let items: [[String: Any]] = [
@@ -180,6 +188,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertNil(actionItems[1].assignedTo)
     }
     
+    @MainActor
     func testParseActionItems_EmptyArray() throws {
         // Given
         let items: [[String: Any]] = []
@@ -192,6 +201,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertTrue(actionItems.isEmpty)
     }
     
+    @MainActor
     func testParseActionItems_InvalidItems() throws {
         // Given - items without required description field
         let items: [[String: Any]] = [
@@ -208,6 +218,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertEqual(actionItems[0].description, "Valid item")
     }
     
+    @MainActor
     func testParseActionItems_GeneratesUniqueIDs() throws {
         // Given
         let items: [[String: Any]] = [
@@ -249,6 +260,7 @@ final class AIServiceTests: XCTestCase {
     
     // MARK: - Data Validation Tests
     
+    @MainActor
     func testParseSummaryResponse_HandlesWrongTypes() throws {
         // Given - response with wrong data types
         let response: [String: Any] = [
@@ -264,6 +276,7 @@ final class AIServiceTests: XCTestCase {
         XCTAssertTrue(summary.keyPoints.isEmpty)
     }
     
+    @MainActor
     func testParseClarityResponse_HandlesWrongTypes() throws {
         // Given
         let response: [String: Any] = [

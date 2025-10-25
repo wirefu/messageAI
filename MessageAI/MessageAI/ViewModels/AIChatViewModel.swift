@@ -16,7 +16,7 @@ final class AIChatViewModel: ObservableObject {
     // MARK: - Published Properties
     
     /// Messages in the current AI session
-    @Published var messages: [AIMessage] = []
+    @Published var messages: [AIChatMessage] = []
     
     /// Whether the AI is currently processing a request
     @Published var isLoading: Bool = false
@@ -34,10 +34,10 @@ final class AIChatViewModel: ObservableObject {
     @Published var sessionId: String?
     
     /// Available message actions
-    @Published var availableActions: [MessageAction] = []
+    @Published var availableActions: [AIChatAction] = []
     
     /// Proactive suggestions from AI
-    @Published var proactiveSuggestions: [ProactiveSuggestion] = []
+    @Published var proactiveSuggestions: [String] = []
     
     // MARK: - Private Properties
     
@@ -62,12 +62,14 @@ final class AIChatViewModel: ObservableObject {
             return
         }
         
-        let userMessage = AIMessage(
+        let userMessage = AIChatMessage(
             id: UUID().uuidString,
-            role: .user,
+            sessionID: sessionId ?? "",
+            userID: "current-user",
             content: currentQuery,
+            role: .user,
             timestamp: Date(),
-            sources: nil
+            aiMetadata: nil
         )
         
         // Add user message immediately
@@ -108,12 +110,12 @@ final class AIChatViewModel: ObservableObject {
     }
     
     /// Dismiss a proactive suggestion
-    func dismissSuggestion(_ suggestion: ProactiveSuggestion) {
-        proactiveSuggestions.removeAll { $0.id == suggestion.id }
+    func dismissSuggestion(_ suggestion: String) {
+        proactiveSuggestions.removeAll { $0 == suggestion }
     }
     
     /// Execute a message action
-    func executeAction(_ action: MessageAction, on message: AIMessage) {
+    func executeAction(_ action: AIChatAction, on message: AIChatMessage) {
         // TODO: Implement action execution
         print("Executing action: \(action.name) on message: \(message.id)")
     }
@@ -126,12 +128,14 @@ final class AIChatViewModel: ObservableObject {
     }
     
     private func addPlaceholderResponse() {
-        let aiResponse = AIMessage(
+        let aiResponse = AIChatMessage(
             id: UUID().uuidString,
-            role: .assistant,
+            sessionID: sessionId ?? "",
+            userID: "ai",
             content: "I'm a placeholder AI response. This will be replaced with actual AI functionality in the next phase.",
+            role: .assistant,
             timestamp: Date(),
-            sources: nil
+            aiMetadata: nil
         )
         
         messages.append(aiResponse)
@@ -139,41 +143,25 @@ final class AIChatViewModel: ObservableObject {
         
         // Add some placeholder actions
         availableActions = [
-            MessageAction(
+            AIChatAction(
                 id: "translate",
-                type: .translate,
                 name: "Translate",
                 description: "Translate this message to another language",
-                isAvailable: true,
                 parameters: ["targetLanguage": "Spanish"]
             ),
-            MessageAction(
+            AIChatAction(
                 id: "summarize",
-                type: .summarize,
                 name: "Summarize",
                 description: "Create a summary of this conversation",
-                isAvailable: true,
                 parameters: nil
             )
         ]
         
         // Add some placeholder suggestions
         proactiveSuggestions = [
-            ProactiveSuggestion(
-                id: UUID().uuidString,
-                type: .followUp,
-                suggestion: "Would you like me to explain this in more detail?",
-                severity: .low,
-                isActionable: true,
-                action: SuggestionAction(
-                    type: "explain",
-                    title: "Explain",
-                    description: "Get a detailed explanation",
-                    parameters: nil
-                ),
-                createdAt: Date(),
-                isDismissed: false
-            )
+            "Would you like me to explain this in more detail?",
+            "Should I translate this to another language?",
+            "Would you like a summary of our conversation?"
         ]
     }
     

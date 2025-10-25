@@ -62,7 +62,13 @@ struct AIChatView: View {
                     // Messages
                     ForEach(viewModel.messages) { message in
                         AIMessageBubbleView(
-                            message: message,
+                            message: AIMessage(
+                                id: message.id,
+                                role: message.role == .user ? .user : .assistant,
+                                content: message.content,
+                                timestamp: message.timestamp,
+                                sources: nil
+                            ),
                             isFromCurrentUser: message.role == .user
                         )
                         .id(message.id)
@@ -150,7 +156,7 @@ struct AIChatView: View {
                 .foregroundColor(.primary)
                 .padding(.horizontal, AIConstants.standardPadding)
             
-            ForEach(viewModel.proactiveSuggestions) { suggestion in
+            ForEach(viewModel.proactiveSuggestions, id: \.self) { suggestion in
                 SuggestionCardView(
                     suggestion: suggestion,
                     onDismiss: {
@@ -207,24 +213,22 @@ struct AIChatView: View {
 // MARK: - Supporting Views
 
 struct SuggestionCardView: View {
-    let suggestion: ProactiveSuggestion
+    let suggestion: String
     let onDismiss: () -> Void
     
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: AIConstants.smallPadding) {
-                Text(suggestion.suggestion)
+                Text(suggestion)
                     .font(AIConstants.messageFont)
                     .foregroundColor(.primary)
                 
-                if let action = suggestion.action {
-                    Button(action: {
-                        // TODO: Execute action
-                    }) {
-                        Text(action.title)
-                            .font(AIConstants.buttonFont)
-                            .foregroundColor(AIConstants.aiBrandColor)
-                    }
+                Button(action: {
+                    // TODO: Execute action
+                }) {
+                    Text("Try this")
+                        .font(AIConstants.buttonFont)
+                        .foregroundColor(AIConstants.aiBrandColor)
                 }
             }
             

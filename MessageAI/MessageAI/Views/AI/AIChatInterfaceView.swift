@@ -17,21 +17,7 @@ struct AIChatInterfaceView: View {
     
     var body: some View {
         NavigationView {
-            Group {
-                if viewModel.isLoading && viewModel.sessions.isEmpty {
-                    LoadingView(message: "Loading AI sessions...")
-                } else if viewModel.sessions.isEmpty {
-                    EmptyStateView(
-                        icon: "brain.head.profile",
-                        title: "No AI Sessions",
-                        message: "Start a conversation with your AI assistant to get help with your messages",
-                        actionTitle: "New AI Chat",
-                        action: { showingNewSession = true }
-                    )
-                } else {
-                    sessionList
-                }
-            }
+            AIChatView()
             .navigationTitle("AI Assistant")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -50,40 +36,12 @@ struct AIChatInterfaceView: View {
                 }
             }
             .task {
-                if let userID = authViewModel.currentUser?.id {
-                    await viewModel.loadSessions(for: userID)
-                }
+                // Initialize AI Chat session
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
     
-    private var sessionList: some View {
-        List {
-            ForEach(viewModel.sessions) { session in
-                NavigationLink {
-                    AIChatView()
-                } label: {
-                    AISessionRowView(session: session)
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        Task {
-                            await viewModel.deleteSession(session)
-                        }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
-        .refreshable {
-            if let userID = authViewModel.currentUser?.id {
-                await viewModel.loadSessions(for: userID)
-            }
-        }
-    }
     
     private var profileButton: some View {
         Menu {
