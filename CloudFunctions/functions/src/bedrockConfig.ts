@@ -1,4 +1,4 @@
-import { BedrockRuntimeClient, BedrockClient } from '@aws-sdk/client-bedrock-runtime';
+import { BedrockRuntimeClient } from '@aws-sdk/client-bedrock-runtime';
 import { BedrockClient as BedrockManagementClient } from '@aws-sdk/client-bedrock';
 import * as functions from 'firebase-functions';
 
@@ -13,7 +13,7 @@ export class BedrockConfig {
   private readonly region: string;
 
   private constructor() {
-    this.region = this.getRegion();
+    this.region = this.getRegionFromConfig();
     this.bedrockRuntime = this.createBedrockRuntimeClient();
     this.bedrockManagement = this.createBedrockManagementClient();
   }
@@ -80,7 +80,7 @@ export class BedrockConfig {
   /**
    * Get AWS region from environment or config
    */
-  private getRegion(): string {
+  private getRegionFromConfig(): string {
     // Try environment variable first
     if (process.env.AWS_REGION) {
       return process.env.AWS_REGION;

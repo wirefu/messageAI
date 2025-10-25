@@ -129,7 +129,7 @@ export const checkClarity = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
   }
 
-  const { message, context: conversationContext } = data;
+  const { message } = data;
 
   if (!message || message.trim().length === 0) {
     // Empty message - no need to check
@@ -206,7 +206,7 @@ export const extractActionItems = functions.https.onCall(async (data, context) =
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
   }
 
-  const { messages, conversationID } = data;
+  const { messages } = data;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return { actionItems: [] };

@@ -9,12 +9,12 @@ import * as functions from 'firebase-functions';
 export class BedrockEmbeddingService {
   private bedrockRuntime: BedrockRuntimeClient;
   private bedrock: BedrockClient;
-  private readonly region: string;
+  // private readonly _region: string;
 
-  constructor(region: string = 'us-east-1') {
-    this.region = region;
-    this.bedrockRuntime = new BedrockRuntimeClient({ region });
-    this.bedrock = new BedrockClient({ region });
+  constructor(_region: string = 'us-east-1') {
+    // this._region = _region;
+    this.bedrockRuntime = new BedrockRuntimeClient({ region: _region });
+    this.bedrock = new BedrockClient({ region: _region });
   }
 
   /**

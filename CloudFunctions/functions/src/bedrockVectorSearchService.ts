@@ -7,11 +7,11 @@ import * as functions from 'firebase-functions';
  */
 export class BedrockVectorSearchService {
   private bedrockRuntime: BedrockRuntimeClient;
-  private readonly region: string;
+  // private readonly _region: string;
 
-  constructor(region: string = 'us-east-1') {
-    this.region = region;
-    this.bedrockRuntime = new BedrockRuntimeClient({ region });
+  constructor(_region: string = 'us-east-1') {
+    // this._region = _region;
+    this.bedrockRuntime = new BedrockRuntimeClient({ region: _region });
   }
 
   /**
@@ -41,7 +41,7 @@ export class BedrockVectorSearchService {
       }
       
       // Calculate similarity scores
-      const messagesWithSimilarity = messagesSnapshot.docs.map(doc => {
+      const messagesWithSimilarity = messagesSnapshot.docs.map((doc: any) => {
         const messageData = doc.data();
         const messageEmbedding = messageData.embedding;
         const similarity = this.calculateCosineSimilarity(queryEmbedding, messageEmbedding);
@@ -55,7 +55,7 @@ export class BedrockVectorSearchService {
       
       // Sort by similarity and return top results
       return messagesWithSimilarity
-        .sort((a, b) => b.similarity - a.similarity)
+        .sort((a: any, b: any) => b.similarity - a.similarity)
         .slice(0, limit);
         
     } catch (error) {
@@ -99,7 +99,7 @@ export class BedrockVectorSearchService {
           .where('embedding', '!=', null)
           .get();
         
-        messagesSnapshot.docs.forEach(doc => {
+        messagesSnapshot.docs.forEach((doc: any) => {
           const messageData = doc.data();
           const messageEmbedding = messageData.embedding;
           const similarity = this.calculateCosineSimilarity(queryEmbedding, messageEmbedding);
@@ -115,7 +115,7 @@ export class BedrockVectorSearchService {
       
       // Sort by similarity and return top results
       return allMessages
-        .sort((a, b) => b.similarity - a.similarity)
+        .sort((a: any, b: any) => b.similarity - a.similarity)
         .slice(0, limit);
         
     } catch (error) {
@@ -206,8 +206,8 @@ export class BedrockVectorSearchService {
       
       // Calculate similarity scores
       const messagesWithSimilarity = messagesSnapshot.docs
-        .filter(doc => doc.id !== messageId)
-        .map(doc => {
+        .filter((doc: any) => doc.id !== messageId)
+        .map((doc: any) => {
           const messageData = doc.data();
           const messageEmbedding = messageData.embedding;
           const similarity = this.calculateCosineSimilarity(referenceEmbedding, messageEmbedding);
@@ -221,7 +221,7 @@ export class BedrockVectorSearchService {
       
       // Sort by similarity and return top results
       return messagesWithSimilarity
-        .sort((a, b) => b.similarity - a.similarity)
+        .sort((a: any, b: any) => b.similarity - a.similarity)
         .slice(0, limit);
         
     } catch (error) {
