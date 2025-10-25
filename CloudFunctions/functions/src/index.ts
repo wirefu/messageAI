@@ -284,3 +284,9 @@ export {
   findSimilarMessages 
 } from './bedrockVectorSearchService';
 
+// Export Bedrock configuration
+export { 
+  testBedrockConnection, 
+  validateAWSCredentials 
+} from './bedrockConfig';
+
