@@ -169,4 +169,3 @@ struct ClaritySuggestionView: View {
         Spacer()
     }
 }
-

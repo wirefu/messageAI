@@ -5,11 +5,11 @@ import XCTest
 @MainActor
 final class ToneAnalysisViewModelTests: XCTestCase {
     var viewModel: ToneAnalysisViewModel!
-    var mockRepository: MockToneAnalysisRepository!
+    var mockRepository: MockToneAnalysisRepositoryViewModel!
     
     override func setUp() {
         super.setUp()
-        mockRepository = MockToneAnalysisRepository()
+        mockRepository = MockToneAnalysisRepositoryViewModel()
         viewModel = ToneAnalysisViewModel(toneRepository: mockRepository)
     }
     
@@ -119,7 +119,7 @@ final class ToneAnalysisViewModelTests: XCTestCase {
         // Given
         let message = "Test message"
         mockRepository.shouldFail = true
-        mockRepository.mockError = AppError.networkError("Test error")
+        mockRepository.mockError = AppError.networkUnavailable
         
         // When
         viewModel.analyzeTone(message: message)
@@ -188,7 +188,7 @@ final class ToneAnalysisViewModelTests: XCTestCase {
 
 // MARK: - Mock Repository
 
-class MockToneAnalysisRepository: ToneAnalysisRepository {
+class MockToneAnalysisRepositoryViewModel: ToneAnalysisRepository {
     var mockResult: ToneAnalysisResult?
     var shouldFail = false
     var mockError: Error?
@@ -199,11 +199,11 @@ class MockToneAnalysisRepository: ToneAnalysisRepository {
         recipientRole: String? = nil
     ) async throws -> ToneAnalysisResult {
         if shouldFail {
-            throw mockError ?? AppError.networkError("Mock error")
+            throw mockError ?? AppError.networkUnavailable
         }
         
         guard let result = mockResult else {
-            throw AppError.networkError("No mock result set")
+            throw AppError.networkUnavailable
         }
         
         return result

@@ -32,11 +32,21 @@ struct MessengerAIApp: App {
 
 struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var onboardingManager = AIFeaturesOnboardingManager()
     
     var body: some View {
         Group {
             if authViewModel.isAuthenticated {
                 ConversationListView()
+                    .sheet(isPresented: $onboardingManager.shouldShowOnboarding) {
+                        AIFeaturesOnboardingView(isPresented: $onboardingManager.shouldShowOnboarding)
+                    }
+                    #if DEBUG
+                    .overlay(alignment: .topTrailing) {
+                        CostMonitorView()
+                            .padding()
+                    }
+                    #endif
             } else {
                 AuthContainerView()
             }

@@ -36,4 +36,3 @@ struct LoadingView: View {
 #Preview("Without Message") {
     LoadingView()
 }
-

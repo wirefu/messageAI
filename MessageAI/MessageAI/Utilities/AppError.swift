@@ -138,4 +138,3 @@ enum AppError: LocalizedError, Equatable {
         }
     }
 }
-

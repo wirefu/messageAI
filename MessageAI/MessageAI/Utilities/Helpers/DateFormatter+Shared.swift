@@ -62,4 +62,3 @@ enum SharedDateFormatters {
         return formatter
     }()
 }
-

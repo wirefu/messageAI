@@ -76,5 +76,3 @@ final class SummaryAutoTriggerService {
         }
     }
 }
-
-

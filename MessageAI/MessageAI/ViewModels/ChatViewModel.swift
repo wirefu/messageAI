@@ -150,6 +150,12 @@ final class ChatViewModel: ObservableObject {
     
     /// Sends a message
     func sendMessage(content: String) async {
+        // Write debug info to a file for easier debugging
+        let debugMessage = "🚀 ChatViewModel: sendMessage called with content: '\(content)'\n"
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let debugFileURL = documentsPath.appendingPathComponent("messageai_debug.log")
+        try? debugMessage.write(to: debugFileURL, atomically: true, encoding: .utf8)
+        
         guard content.isNotEmpty else {
             error = .emptyMessage
             return
@@ -181,6 +187,32 @@ final class ChatViewModel: ObservableObject {
             // Update status to sent (stays grey until actually delivered)
             if let index = messages.firstIndex(where: { $0.id == message.id }) {
                 messages[index].status = .sent
+            }
+            
+            // Auto-extract action items from the message
+            Task {
+                do {
+                    // Write debug info to a file for easier debugging
+                    let debugMessage = "🤖 Starting action item extraction for: '\(content.trimmed)'\n"
+                    let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                    let debugFileURL = documentsPath.appendingPathComponent("messageai_debug.log")
+                    try debugMessage.write(to: debugFileURL, atomically: true, encoding: .utf8)
+                    
+                    let actionItemRepository = ActionItemRepository()
+                    let extractedItems = try await actionItemRepository.autoExtractActionItems(
+                        messageContent: content.trimmed,
+                        conversationID: conversationID,
+                        messageID: message.id
+                    )
+                    
+                    let successMessage = "✅ Extracted \(extractedItems.count) action items: \(extractedItems.map { $0.description })\n"
+                    try successMessage.write(to: debugFileURL, atomically: false, encoding: .utf8)
+                } catch {
+                    let errorMessage = "❌ Action item extraction failed: \(error.localizedDescription)\n"
+                    let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                    let debugFileURL = documentsPath.appendingPathComponent("messageai_debug.log")
+                    try? errorMessage.write(to: debugFileURL, atomically: false, encoding: .utf8)
+                }
             }
         } catch let appError as AppError {
             error = appError

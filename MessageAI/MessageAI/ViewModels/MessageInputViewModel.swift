@@ -157,4 +157,3 @@ final class MessageInputViewModel: ObservableObject {
         await checkClarity(for: messageText)
     }
 }
-

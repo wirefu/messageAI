@@ -79,5 +79,3 @@ struct SummaryAutoTriggerView: View {
         onDismiss: { print("Dismiss tapped") }
     )
 }
-
-

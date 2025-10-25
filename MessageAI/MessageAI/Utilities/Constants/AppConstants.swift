@@ -57,6 +57,9 @@ enum AppConstants {
     enum UIConfig {
         /// Message bubble corner radius
         static let messageBubbleRadius: CGFloat = 16
+        
+        /// General corner radius
+        static let cornerRadius: CGFloat = 12
 
         /// Message bubble padding
         static let messageBubblePadding: CGFloat = 12
@@ -111,4 +114,3 @@ enum AppConstants {
         static let newMessageReceived = "newMessageReceived"
     }
 }
-

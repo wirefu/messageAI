@@ -161,5 +161,3 @@ final class SummaryRepository: SummaryRepositoryProtocol {
         }
     }
 }
-
-

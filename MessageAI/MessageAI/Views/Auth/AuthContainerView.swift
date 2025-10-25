@@ -38,4 +38,3 @@ struct AuthContainerView: View {
     AuthContainerView()
         .environmentObject(AuthViewModel())
 }
-

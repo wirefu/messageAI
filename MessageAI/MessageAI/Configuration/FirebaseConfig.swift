@@ -60,4 +60,3 @@ enum FirebaseConfig {
         #endif
     }
 }
-

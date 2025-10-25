@@ -172,23 +172,29 @@ final class ActionItemRepository: ActionItemRepositoryProtocol {
         messageID: String
     ) async throws -> [ActionItem] {
         do {
+            print("🔍 ActionItemRepository: Extracting from message: '\(messageContent)'")
+            
             // Call AI service to extract action items
             let items = try await AIService.shared.extractActionItems(
                 messages: [messageContent],
                 conversationID: conversationID
             )
             
+            print("🤖 AIService returned \(items.count) items: \(items.map { $0.description })")
+            
             // Save extracted items to Firestore
             for item in items {
                 var updatedItem = item
                 updatedItem.messageID = messageID
+                print("💾 Saving action item: '\(updatedItem.description)' to Firestore")
                 try await createActionItem(updatedItem)
+                print("✅ Successfully saved action item to Firestore")
             }
             
             return items
         } catch {
+            print("❌ ActionItemRepository error: \(error.localizedDescription)")
             throw AppError.aiFunctionError("Failed to extract action items: \(error.localizedDescription)")
         }
     }
 }
-

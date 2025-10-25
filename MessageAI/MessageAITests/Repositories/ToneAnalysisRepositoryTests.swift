@@ -27,8 +27,8 @@ final class ToneAnalysisRepositoryTests: XCTestCase {
         // Given
         let message = "Hi there! How are you doing today?"
         mockFunctions.mockResponse = [
-            "toneWarning": nil,
-            "alternativePhrasing": nil,
+            "toneWarning": NSNull(),
+            "alternativePhrasing": NSNull(),
             "improvementSuggestions": [],
             "severity": "none"
         ]
@@ -165,7 +165,7 @@ class MockCallable {
     
     func call(_ data: [String: Any]) async throws -> MockCallableResult {
         if shouldFail {
-            throw AppError.networkError("Mock network error")
+            throw AppError.networkUnavailable
         }
         
         return MockCallableResult(data: mockResponse)

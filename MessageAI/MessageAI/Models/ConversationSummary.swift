@@ -120,4 +120,3 @@ extension ConversationSummary {
         keyPoints.count + decisions.count + actionItems.count + openQuestions.count
     }
 }
-
