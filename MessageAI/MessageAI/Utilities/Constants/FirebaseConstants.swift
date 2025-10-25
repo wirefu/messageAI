@@ -26,6 +26,18 @@ enum FirebaseConstants {
 
     /// Summaries subcollection (within conversations)
     static let summariesSubcollection = "summaries"
+    
+    /// AI Chat sessions subcollection (within users)
+    static let aiSessionsSubcollection = "aiSessions"
+    
+    /// AI Chat messages subcollection (within AI sessions)
+    static let aiMessagesSubcollection = "aiMessages"
+    
+    /// AI Usage stats subcollection (within users)
+    static let aiUsageStatsSubcollection = "aiUsageStats"
+    
+    /// AI Cache collection
+    static let aiCacheCollection = "aiCache"
 
     // MARK: - User Fields
 
@@ -90,11 +102,80 @@ enum FirebaseConstants {
         static let createdAt = "createdAt"
     }
 
+    // MARK: - AI Chat Fields
+
+    enum AIChatFields {
+        static let id = "id"
+        static let sessionID = "sessionID"
+        static let userID = "userID"
+        static let content = "content"
+        static let role = "role"
+        static let timestamp = "timestamp"
+        static let aiMetadata = "aiMetadata"
+    }
+
+    // MARK: - AI Chat Session Fields
+
+    enum AIChatSessionFields {
+        static let id = "id"
+        static let userID = "userID"
+        static let title = "title"
+        static let description = "description"
+        static let createdAt = "createdAt"
+        static let lastUpdated = "lastUpdated"
+        static let isActive = "isActive"
+        static let settings = "settings"
+        static let statistics = "statistics"
+        static let includeContext = "includeContext"
+        static let enableSuggestions = "enableSuggestions"
+        static let enableActions = "enableActions"
+        static let preferredModel = "preferredModel"
+        static let responseStyle = "responseStyle"
+    }
+
+    // MARK: - AI Usage Fields
+
+    enum AIUsageFields {
+        static let id = "id"
+        static let totalInteractions = "totalInteractions"
+        static let actionsExecuted = "actionsExecuted"
+        static let suggestionsProvided = "suggestionsProvided"
+        static let searchesPerformed = "searchesPerformed"
+        static let totalTokensUsed = "totalTokensUsed"
+        static let totalCostCents = "totalCostCents"
+        static let lastUpdated = "lastUpdated"
+        static let dailyUsage = "dailyUsage"
+        static let featureUsage = "featureUsage"
+    }
+
+    // MARK: - AI Search Fields
+
+    enum AISearchFields {
+        static let id = "id"
+        static let messageID = "messageID"
+        static let conversationID = "conversationID"
+        static let content = "content"
+        static let senderID = "senderID"
+        static let timestamp = "timestamp"
+        static let relevance = "relevance"
+        static let searchQuery = "searchQuery"
+        static let context = "context"
+        static let metadata = "metadata"
+    }
+
     // MARK: - Cloud Function Names
 
     enum CloudFunctions {
         static let summarizeConversation = "summarizeConversation"
         static let checkClarity = "checkClarity"
         static let extractActionItems = "extractActionItems"
+        static let aiChatInterface = "aiChatInterface"
+        static let executeAIChatAction = "executeAIChatAction"
+        static let getAIChatSuggestions = "getAIChatSuggestions"
+        static let searchAIConversations = "searchAIConversations"
+        static let getAIUsageStats = "getAIUsageStats"
+        static let indexMessageForAI = "indexMessageForAI"
+        static let getAIChatHistory = "getAIChatHistory"
+        static let clearAIChatSession = "clearAIChatSession"
     }
 }

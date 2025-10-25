@@ -37,12 +37,12 @@ struct ContentView: View {
     var body: some View {
         Group {
             if authViewModel.isAuthenticated {
-                ConversationListView()
+                MainTabView()
                     .sheet(isPresented: $onboardingManager.shouldShowOnboarding) {
                         AIFeaturesOnboardingView(isPresented: $onboardingManager.shouldShowOnboarding)
                     }
                     #if DEBUG
-                    .overlay(alignment: .topTrailing) {
+                    .overlay(alignment: Alignment(horizontal: .trailing, vertical: .top)) {
                         CostMonitorView()
                             .padding()
                     }
