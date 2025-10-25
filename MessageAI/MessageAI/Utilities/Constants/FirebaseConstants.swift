@@ -178,4 +178,49 @@ enum FirebaseConstants {
         static let getAIChatHistory = "getAIChatHistory"
         static let clearAIChatSession = "clearAIChatSession"
     }
+    
+    // MARK: - AI Message Fields
+    
+    enum AIMessageFields {
+        static let id = "id"
+        static let role = "role"
+        static let content = "content"
+        static let timestamp = "timestamp"
+        static let sources = "sources"
+    }
+    
+    // MARK: - AI Session Fields
+    
+    enum AISessionFields {
+        static let id = "id"
+        static let userId = "userId"
+        static let createdAt = "createdAt"
+        static let updatedAt = "updatedAt"
+        static let messages = "messages"
+        static let isActive = "isActive"
+    }
+    
+    // MARK: - Message Action Fields
+    
+    enum MessageActionFields {
+        static let id = "id"
+        static let type = "type"
+        static let name = "name"
+        static let description = "description"
+        static let isAvailable = "isAvailable"
+        static let parameters = "parameters"
+    }
+    
+    // MARK: - Proactive Suggestion Fields
+    
+    enum ProactiveSuggestionFields {
+        static let id = "id"
+        static let type = "type"
+        static let suggestion = "suggestion"
+        static let severity = "severity"
+        static let isActionable = "isActionable"
+        static let action = "action"
+        static let createdAt = "createdAt"
+        static let isDismissed = "isDismissed"
+    }
 }

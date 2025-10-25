@@ -51,6 +51,32 @@ service cloud.firestore {
                               request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
       }
     }
+    
+    // AI Sessions - users can only access their own AI sessions
+    match /users/{userId}/aiSessions/{sessionId} {
+      allow read, write: if isOwner(userId);
+      
+      // AI Messages subcollection within AI sessions
+      match /aiMessages/{messageId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Proactive Suggestions - users can only access their own suggestions
+    match /users/{userId}/proactiveSuggestions/{suggestionId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // AI Usage Stats - users can only access their own stats
+    match /users/{userId}/aiUsageStats/{statsId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // AI Cache - read-only for authenticated users
+    match /aiCache/{cacheId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only Cloud Functions can write to cache
+    }
   }
 }
 
