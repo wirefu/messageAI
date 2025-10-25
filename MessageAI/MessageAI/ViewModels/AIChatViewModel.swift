@@ -7,147 +7,178 @@
 //
 
 import Foundation
-import Combine
 import FirebaseFirestore
 
-/// ViewModel for managing AI Chat Interface state and operations
+/// ViewModel for AI Chat Interface
 @MainActor
 final class AIChatViewModel: ObservableObject {
+    
     // MARK: - Published Properties
     
-    @Published var sessions: [AIChatSession] = []
-    @Published var messages: [AIChatMessage] = []
-    @Published var currentSuggestions: [String] = []
-    @Published var isLoading = false
-    @Published var error: AppError?
+    /// Messages in the current AI session
+    @Published var messages: [AIMessage] = []
     
-    // MARK: - Dependencies
+    /// Whether the AI is currently processing a request
+    @Published var isLoading: Bool = false
     
-    private let aiChatRepository: AIChatRepositoryProtocol
-    private let sessionID: String?
+    /// Current error message, if any
+    @Published var errorMessage: String?
+    
+    /// Current user query being typed
+    @Published var currentQuery: String = ""
+    
+    /// Whether the session is active
+    @Published var isSessionActive: Bool = false
+    
+    /// Current AI session ID
+    @Published var sessionId: String?
+    
+    /// Available message actions
+    @Published var availableActions: [MessageAction] = []
+    
+    /// Proactive suggestions from AI
+    @Published var proactiveSuggestions: [ProactiveSuggestion] = []
+    
+    // MARK: - Private Properties
+    
+    private let db = Firestore.firestore()
+    private var listener: ListenerRegistration?
     
     // MARK: - Initialization
     
-    init(
-        sessionID: String? = nil,
-        aiChatRepository: AIChatRepositoryProtocol = AIChatRepository()
-    ) {
-        self.sessionID = sessionID
-        self.aiChatRepository = aiChatRepository
+    init() {
+        createNewSession()
     }
     
-    // MARK: - Session Management
+    deinit {
+        listener?.remove()
+    }
     
-    /// Loads AI chat sessions for a user
-    func loadSessions(for userID: String) async {
-        isLoading = true
-        defer { isLoading = false }
-        
-        do {
-            sessions = try await aiChatRepository.getSessions(for: userID)
-        } catch {
-            self.error = .networkUnavailable
+    // MARK: - Public Methods
+    
+    /// Send a query to the AI assistant
+    func sendQuery() {
+        guard !currentQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
         }
-    }
-    
-    /// Creates a new AI chat session
-    func createSession(_ session: AIChatSession) async throws -> AIChatSession {
-        return try await aiChatRepository.createSession(session)
-    }
-    
-    /// Deletes an AI chat session
-    func deleteSession(_ session: AIChatSession) async {
-        do {
-            try await aiChatRepository.deleteSession(session)
-            sessions.removeAll { $0.id == session.id }
-        } catch {
-            self.error = .networkUnavailable
-        }
-    }
-    
-    // MARK: - Message Management
-    
-    /// Loads messages for the current session
-    func loadMessages() async {
-        guard let sessionID = sessionID else { return }
         
-        isLoading = true
-        defer { isLoading = false }
-        
-        do {
-            messages = try await aiChatRepository.getMessages(for: sessionID)
-        } catch {
-            self.error = .networkUnavailable
-        }
-    }
-    
-    /// Sends a message to the AI assistant
-    func sendMessage(_ content: String) async {
-        guard let sessionID = sessionID else { return }
-        
-        let message = AIChatMessage(
+        let userMessage = AIMessage(
             id: UUID().uuidString,
-            sessionID: sessionID,
-            userID: "", // Will be set by repository
-            content: content,
             role: .user,
+            content: currentQuery,
             timestamp: Date(),
-            aiMetadata: nil
+            sources: nil
         )
         
-        do {
-            // Add user message immediately
-            messages.append(message)
-            
-            // Send to AI and get response
-            let response = try await aiChatRepository.sendMessage(message)
-            
-            // Add AI response
-            if let aiMessage = response.aiMessage {
-                messages.append(aiMessage)
-            }
-            
-            // Update suggestions
-            currentSuggestions = response.suggestions ?? []
-            
-        } catch {
-            self.error = .networkUnavailable
-            // Remove the user message if sending failed
-            messages.removeAll { $0.id == message.id }
-        }
-    }
-    
-    /// Clears the current session
-    func clearSession() async {
-        guard let sessionID = sessionID else { return }
+        // Add user message immediately
+        messages.append(userMessage)
+        currentQuery = ""
+        isLoading = true
+        errorMessage = nil
         
-        do {
-            try await aiChatRepository.clearSession(sessionID)
-            messages.removeAll()
-            currentSuggestions.removeAll()
-        } catch {
-            self.error = .networkUnavailable
+        // TODO: Implement actual AI response
+        // For now, add a placeholder response
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.addPlaceholderResponse()
         }
     }
     
-    /// Gets proactive suggestions for the current session
-    func getSuggestions() async {
-        guard let sessionID = sessionID else { return }
+    /// Clear the current session
+    func clearSession() {
+        messages.removeAll()
+        availableActions.removeAll()
+        proactiveSuggestions.removeAll()
+        errorMessage = nil
+        createNewSession()
+    }
+    
+    /// Retry the last failed request
+    func retryLastRequest() {
+        guard let lastUserMessage = messages.last(where: { $0.role == .user }) else {
+            return
+        }
         
-        do {
-            currentSuggestions = try await aiChatRepository.getSuggestions(for: sessionID)
-        } catch {
-            self.error = .networkUnavailable
-        }
+        currentQuery = lastUserMessage.content
+        sendQuery()
     }
     
-    /// Executes an AI action
-    func executeAction(_ action: AIChatAction, on message: AIChatMessage) async -> Any? {
-        do {
-            return try await aiChatRepository.executeAction(action, on: message)
-        } catch {
-            self.error = .networkUnavailable
-            return nil
-        }
+    /// Dismiss an error message
+    func dismissError() {
+        errorMessage = nil
+    }
+    
+    /// Dismiss a proactive suggestion
+    func dismissSuggestion(_ suggestion: ProactiveSuggestion) {
+        proactiveSuggestions.removeAll { $0.id == suggestion.id }
+    }
+    
+    /// Execute a message action
+    func executeAction(_ action: MessageAction, on message: AIMessage) {
+        // TODO: Implement action execution
+        print("Executing action: \(action.name) on message: \(message.id)")
+    }
+    
+    // MARK: - Private Methods
+    
+    private func createNewSession() {
+        sessionId = UUID().uuidString
+        isSessionActive = true
+    }
+    
+    private func addPlaceholderResponse() {
+        let aiResponse = AIMessage(
+            id: UUID().uuidString,
+            role: .assistant,
+            content: "I'm a placeholder AI response. This will be replaced with actual AI functionality in the next phase.",
+            timestamp: Date(),
+            sources: nil
+        )
+        
+        messages.append(aiResponse)
+        isLoading = false
+        
+        // Add some placeholder actions
+        availableActions = [
+            MessageAction(
+                id: "translate",
+                type: .translate,
+                name: "Translate",
+                description: "Translate this message to another language",
+                isAvailable: true,
+                parameters: ["targetLanguage": "Spanish"]
+            ),
+            MessageAction(
+                id: "summarize",
+                type: .summarize,
+                name: "Summarize",
+                description: "Create a summary of this conversation",
+                isAvailable: true,
+                parameters: nil
+            )
+        ]
+        
+        // Add some placeholder suggestions
+        proactiveSuggestions = [
+            ProactiveSuggestion(
+                id: UUID().uuidString,
+                type: .followUp,
+                suggestion: "Would you like me to explain this in more detail?",
+                severity: .low,
+                isActionable: true,
+                action: SuggestionAction(
+                    type: "explain",
+                    title: "Explain",
+                    description: "Get a detailed explanation",
+                    parameters: nil
+                ),
+                createdAt: Date(),
+                isDismissed: false
+            )
+        ]
+    }
+    
+    private func handleError(_ error: Error) {
+        errorMessage = error.localizedDescription
+        isLoading = false
     }
 }

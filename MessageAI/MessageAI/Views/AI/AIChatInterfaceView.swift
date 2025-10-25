@@ -62,10 +62,7 @@ struct AIChatInterfaceView: View {
         List {
             ForEach(viewModel.sessions) { session in
                 NavigationLink {
-                    AIChatView(
-                        session: session,
-                        currentUserID: authViewModel.currentUser?.id ?? ""
-                    )
+                    AIChatView()
                 } label: {
                     AISessionRowView(session: session)
                 }
