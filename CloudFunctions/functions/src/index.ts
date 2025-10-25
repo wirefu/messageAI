@@ -272,3 +272,15 @@ If no action items found, return empty array.`,
 // Export tone analysis function
 export { analyzeTone } from './toneAnalysis';
 
+// Export Bedrock services
+export { 
+  generateMessageEmbedding, 
+  generateConversationEmbeddings 
+} from './bedrockEmbeddingService';
+
+export { 
+  searchConversationMessages, 
+  searchAllTeamMessages, 
+  findSimilarMessages 
+} from './bedrockVectorSearchService';
+
