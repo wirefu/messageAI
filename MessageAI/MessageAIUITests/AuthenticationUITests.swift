@@ -12,16 +12,16 @@ import XCTest
 final class AuthenticationUITests: XCTestCase {
     var app: XCUIApplication!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
     }
     
-    override func tearDown() {
+    override func tearDown() async throws {
         app = nil
-        super.tearDown()
+        try await super.tearDown()
     }
     
     func testLoginViewDisplays() {
@@ -53,41 +53,31 @@ final class AuthenticationUITests: XCTestCase {
         XCTAssertFalse(loginButton.isEnabled)
     }
     
-    func testCompleteSignUpFlow() {
+    func testCompleteSignUpFlow() async throws {
         // Navigate to sign up
         app.buttons["Sign Up"].tap()
-        
-        // Wait for sign up screen
         XCTAssertTrue(app.staticTexts["Create Account"].waitForExistence(timeout: 2))
         
-        // Fill in form
-        let displayNameField = app.textFields["Your name"]
-        displayNameField.tap()
-        displayNameField.typeText("UI Test User")
+        // Fill out sign-up form
+        app.textFields["Your name"].tap()
+        app.textFields["Your name"].typeText("Test User")
         
-        let emailField = app.textFields.matching(identifier: "your.email@company.com").firstMatch
-        emailField.tap()
-        emailField.typeText("uitest@example.com")
+        app.textFields.matching(identifier: "your.email@company.com").firstMatch.tap()
+        app.textFields.matching(identifier: "your.email@company.com").firstMatch.typeText("test@example.com")
         
-        let passwordField = app.secureTextFields["At least 8 characters"]
-        passwordField.tap()
-        passwordField.typeText("password123")
+        app.secureTextFields["At least 8 characters"].tap()
+        app.secureTextFields["At least 8 characters"].typeText("password123")
         
-        let confirmPasswordField = app.secureTextFields["Re-enter password"]
-        confirmPasswordField.tap()
-        confirmPasswordField.typeText("password123")
+        app.secureTextFields["Re-enter password"].tap()
+        app.secureTextFields["Re-enter password"].typeText("password123")
         
-        // Tap create account button
+        // Submit form
         let createButton = app.buttons["Create Account"]
         XCTAssertTrue(createButton.isEnabled, "Create Account button should be enabled with valid input")
         createButton.tap()
         
         // Wait for navigation to Messages screen (with timeout for Firebase)
-        let messagesTitle = app.navigationBars["Messages"]
-        XCTAssertTrue(messagesTitle.waitForExistence(timeout: 10), "Should navigate to Messages screen after sign up")
-        
-        // Verify we're on the messages screen
-        XCTAssertTrue(app.staticTexts["No Conversations"].exists || app.navigationBars["Messages"].exists)
+        XCTAssertTrue(app.navigationBars["Messages"].waitForExistence(timeout: 10), "Should navigate to Messages screen after sign up")
     }
     
     func testLoginWithTestAccount() {
