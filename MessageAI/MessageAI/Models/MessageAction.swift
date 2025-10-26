@@ -49,6 +49,25 @@ enum MessageActionType: String, Codable, CaseIterable {
     case clarify
     case expand
     case shorten
+    
+    var displayName: String {
+        switch self {
+        case .translate:
+            return "Translate"
+        case .rewrite:
+            return "Rewrite"
+        case .extract:
+            return "Extract Entities"
+        case .summarize:
+            return "Summarize"
+        case .clarify:
+            return "Clarify"
+        case .expand:
+            return "Expand"
+        case .shorten:
+            return "Shorten"
+        }
+    }
 }
 
 /// Request for performing a message action
@@ -155,4 +174,12 @@ extension MessageAction {
             parameters: data[FirebaseConstants.MessageActionFields.parameters] as? [String: String]
         )
     }
+}
+
+/// Result of performing a message action
+struct MessageActionResult {
+    let actionType: MessageActionType
+    let originalText: String
+    let resultText: String
+    let metadata: [String: Any]
 }

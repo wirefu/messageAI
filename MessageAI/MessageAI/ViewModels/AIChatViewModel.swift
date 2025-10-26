@@ -8,6 +8,7 @@
 
 import Foundation
 import FirebaseFirestore
+import FirebaseFunctions
 
 /// ViewModel for AI Chat Interface
 @MainActor
@@ -78,10 +79,9 @@ final class AIChatViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         
-        // TODO: Implement actual AI response
-        // For now, add a placeholder response
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.addPlaceholderResponse()
+        // Call the AI Chat Interface Cloud Function
+        Task {
+            await callAIChatInterface(userMessage)
         }
     }
     
@@ -125,6 +125,75 @@ final class AIChatViewModel: ObservableObject {
     private func createNewSession() {
         sessionId = UUID().uuidString
         isSessionActive = true
+    }
+    
+    private func callAIChatInterface(_ userMessage: AIChatMessage) async {
+        do {
+            // Import Firebase Functions
+            let functions = Functions.functions()
+            
+            // Prepare the data for the Cloud Function
+            let data: [String: Any] = [
+                "message": userMessage.content,
+                "sessionId": userMessage.sessionID
+            ]
+            
+            // Call the aiChatInterface Cloud Function
+            let result = try await functions.httpsCallable("aiChatInterface").call(data)
+            
+            // Parse the response
+            guard let responseData = result.data as? [String: Any] else {
+                throw AppError.networkUnavailable
+            }
+            
+            // Extract the AI response
+            let aiResponse = responseData["response"] as? String ?? "I'm sorry, I couldn't process that request."
+            let suggestions = responseData["suggestions"] as? [String] ?? []
+            let actions = responseData["actions"] as? [[String: Any]] ?? []
+            
+            // Create the AI message
+            let aiMessage = AIChatMessage(
+                id: UUID().uuidString,
+                sessionID: userMessage.sessionID,
+                userID: "ai",
+                content: aiResponse,
+                role: .assistant,
+                timestamp: Date(),
+                aiMetadata: nil
+            )
+            
+            // Update the UI on the main thread
+            await MainActor.run {
+                self.messages.append(aiMessage)
+                self.isLoading = false
+                self.proactiveSuggestions = suggestions
+                self.availableActions = self.parseActions(from: actions)
+            }
+            
+        } catch {
+            // Handle errors
+            await MainActor.run {
+                self.isLoading = false
+                self.errorMessage = "Failed to get AI response: \(error.localizedDescription)"
+            }
+        }
+    }
+    
+    private func parseActions(from actionsData: [[String: Any]]) -> [AIChatAction] {
+        return actionsData.compactMap { actionData in
+            guard let id = actionData["id"] as? String,
+                  let name = actionData["name"] as? String,
+                  let description = actionData["description"] as? String else {
+                return nil
+            }
+            
+            return AIChatAction(
+                id: id,
+                name: name,
+                description: description,
+                parameters: actionData["parameters"] as? [String: String]
+            )
+        }
     }
     
     private func addPlaceholderResponse() {

@@ -41,12 +41,6 @@ struct ContentView: View {
                     .sheet(isPresented: $onboardingManager.shouldShowOnboarding) {
                         AIFeaturesOnboardingView(isPresented: $onboardingManager.shouldShowOnboarding)
                     }
-                    #if DEBUG
-                    .overlay(alignment: Alignment(horizontal: .trailing, vertical: .top)) {
-                        CostMonitorView()
-                            .padding()
-                    }
-                    #endif
             } else {
                 AuthContainerView()
             }

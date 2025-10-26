@@ -31,10 +31,17 @@ struct AIChatView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Clear") {
-                        viewModel.clearSession()
+                    HStack(spacing: 12) {
+                        // Cost Monitor Button (only on AI Assistant screen)
+                        #if DEBUG
+                        SubtleCostMonitor()
+                        #endif
+                        
+                        Button("Clear") {
+                            viewModel.clearSession()
+                        }
+                        .foregroundColor(AIConstants.aiBrandColor)
                     }
-                    .foregroundColor(AIConstants.aiBrandColor)
                 }
             }
             .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {

@@ -18,7 +18,7 @@ struct AIChatInterfaceView: View {
     var body: some View {
         NavigationView {
             AIChatView()
-            .navigationTitle("AI Assistant")
+            .navigationTitle("AI Chat")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

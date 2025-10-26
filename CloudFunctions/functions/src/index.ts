@@ -5,10 +5,19 @@ import OpenAI from 'openai';
 // Initialize Firebase Admin
 admin.initializeApp();
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || functions.config().openai?.key || 'mock-key-for-testing',
-});
+// Initialize OpenAI (only if API key is available)
+let openai: OpenAI | null = null;
+try {
+  const apiKey = functions.config().openai?.key;
+  if (apiKey && apiKey !== 'your_openai_api_key_here') {
+    openai = new OpenAI({ apiKey });
+    console.log('OpenAI service initialized successfully');
+  } else {
+    console.warn('OpenAI not initialized - API key missing or invalid');
+  }
+} catch (error) {
+  console.warn('OpenAI not initialized - API key missing or invalid');
+}
 
 /**
  * Summarizes a conversation using mock AI response
@@ -27,6 +36,11 @@ export const summarizeConversation = functions.https.onCall(async (data, context
   }
 
   try {
+    // Check if OpenAI is available
+    if (!openai) {
+      throw new functions.https.HttpsError('failed-precondition', 'OpenAI service not configured');
+    }
+
     // Fetch messages from Firestore
     const messagesSnapshot = await admin.firestore()
       .collection('conversations')
@@ -142,6 +156,11 @@ export const checkClarity = functions.https.onCall(async (data, context) => {
   }
 
   try {
+    // Check if OpenAI is available
+    if (!openai) {
+      throw new functions.https.HttpsError('failed-precondition', 'OpenAI service not configured');
+    }
+
     // Call OpenAI GPT-4 for clarity analysis
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -213,6 +232,11 @@ export const extractActionItems = functions.https.onCall(async (data, context) =
   }
 
   try {
+    // Check if OpenAI is available
+    if (!openai) {
+      throw new functions.https.HttpsError('failed-precondition', 'OpenAI service not configured');
+    }
+
     // Format messages for analysis
     const conversationText = messages.join('\n');
 
@@ -301,4 +325,14 @@ export {
   getAIChatHistory,
   clearAIChatSession
 } from './aiChatInterface';
+
+// Export Conversational Search
+export {
+  conversationSearch
+} from './handlers/conversationSearch';
+
+// Export Message Actions
+export {
+  performMessageAction
+} from './handlers/messageActions';
 

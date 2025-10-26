@@ -40,7 +40,7 @@ export const aiChatInterface = functions.https.onCall(async (data, context) => {
     return {
       success: true,
       response: result.response,
-      suggestions: result.suggestions,
+      suggestions: result.suggestions.map(s => s.suggestion), // Convert to array of strings
       actions: result.actions,
       context: result.context,
       timestamp: new Date().toISOString()

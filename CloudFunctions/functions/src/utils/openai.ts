@@ -1,16 +1,22 @@
 import OpenAI from 'openai';
+import * as functions from 'firebase-functions';
 
 /**
  * OpenAI Service for AI Chat Assistant
  * Provides OpenAI API integration for conversational AI
  */
 export class OpenAIService {
-  private client: OpenAI;
+  private client: OpenAI | null;
 
   constructor() {
-    this.client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const apiKey = functions.config().openai?.key;
+    if (apiKey && apiKey !== 'your_openai_api_key_here') {
+      this.client = new OpenAI({ apiKey });
+      console.log('OpenAI service initialized successfully');
+    } else {
+      this.client = null;
+      console.warn('OpenAI service not initialized - API key missing or invalid');
+    }
   }
 
   /**
@@ -20,6 +26,10 @@ export class OpenAIService {
     messages: Array<{role: 'user' | 'assistant' | 'system', content: string}>,
     context?: string
   ): Promise<string> {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
+
     try {
       const systemMessage = context 
         ? `You are an AI assistant for a team messaging app. Use this context to provide helpful responses: ${context}`
@@ -51,6 +61,10 @@ export class OpenAIService {
     conversationContext: string,
     recentMessages: string[]
   ): Promise<Array<{type: string, suggestion: string, confidence: number}>> {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
+
     try {
       const prompt = `Based on this conversation context: "${conversationContext}" and recent messages: ${recentMessages.join(', ')}, generate 3 proactive suggestions for the user. Each suggestion should be actionable and relevant. Format as JSON array with type, suggestion, and confidence (0-1).`;
 
@@ -89,6 +103,10 @@ export class OpenAIService {
     sentiment: 'positive' | 'neutral' | 'negative',
     suggestions: string[]
   }> {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
+
     try {
       const prompt = `Analyze the tone of this message: "${message}". Return JSON with tone (formal/casual/urgent/friendly), sentiment (positive/neutral/negative), and suggestions for improvement if needed.`;
 
@@ -128,6 +146,10 @@ export class OpenAIService {
     dueDate?: string,
     priority: 'high' | 'medium' | 'low'
   }>> {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
+
     try {
       const prompt = `Extract action items from this conversation: "${conversationText}". Return JSON array with action, assignee (if mentioned), dueDate (if mentioned), and priority (high/medium/low).`;
 
@@ -167,6 +189,10 @@ export class OpenAIService {
     decisions: string[],
     nextSteps: string[]
   }> {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
+
     try {
       const prompt = `Summarize this conversation: "${conversationText}". Return JSON with summary, keyPoints array, decisions array, and nextSteps array.`;
 
@@ -201,6 +227,10 @@ export class OpenAIService {
    * Translate text to target language
    */
   async translateText(text: string, targetLanguage: string): Promise<string> {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
+
     try {
       const prompt = `Translate this text to ${targetLanguage}: "${text}". Return only the translation.`;
 
@@ -225,6 +255,10 @@ export class OpenAIService {
    * Rewrite text with different tone
    */
   async rewriteText(text: string, tone: 'formal' | 'casual' | 'technical' | 'friendly'): Promise<string> {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
+
     try {
       const prompt = `Rewrite this text in a ${tone} tone: "${text}". Return only the rewritten text.`;
 

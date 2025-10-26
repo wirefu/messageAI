@@ -9,6 +9,28 @@
 import Foundation
 import FirebaseFunctions
 
+// MARK: - AI Error Types
+
+enum AIError: LocalizedError {
+    case invalidResponse
+    case actionFailed(String)
+    case networkError(Error)
+    case authenticationError
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidResponse:
+            return "Invalid response from AI service"
+        case .actionFailed(let message):
+            return "Action failed: \(message)"
+        case .networkError(let error):
+            return "Network error: \(error.localizedDescription)"
+        case .authenticationError:
+            return "Authentication required"
+        }
+    }
+}
+
 /// Service for calling AI Cloud Functions with caching and cost optimization
 @MainActor
 final class AIService {
@@ -18,7 +40,6 @@ final class AIService {
     
     private let functions: Functions
     private let cache = AICache()
-    private let costTracker = CostTracker.shared
     
     private init() {
         // PRODUCTION MODE: Use deployed Cloud Functions with real OpenAI
@@ -61,7 +82,7 @@ final class AIService {
             cache.setSummary(summary, for: cacheKey)
             
             // Track cost
-            costTracker.trackOpenAICall(feature: "summarization", cost: 0.01)
+            // Cost tracking removed for now
             
             return summary
         } catch {
@@ -102,7 +123,7 @@ final class AIService {
             cache.setClaritySuggestion(suggestion, for: cacheKey)
             
             // Track cost
-            costTracker.trackOpenAICall(feature: "clarity", cost: 0.005)
+            // Cost tracking removed for now
             
             return suggestion
         } catch {
@@ -213,6 +234,127 @@ final class AIService {
             )
         }
     }
+    
+    // MARK: - Message Actions
+    
+    /// Perform a message action (translate, rewrite, extract, summarize)
+    /// - Parameters:
+    ///   - actionType: Type of action to perform
+    ///   - messageId: ID of the message to act on
+    ///   - conversationId: ID of the conversation
+    ///   - parameters: Additional parameters for the action
+    /// - Returns: Action result with processed content
+    func performMessageAction(
+        actionType: MessageActionType,
+        messageId: String,
+        conversationId: String,
+        parameters: [String: Any] = [:]
+    ) async throws -> MessageActionResult {
+        // Check cache first
+        let cacheKey = "action_\(actionType.rawValue)_\(messageId)_\(conversationId)"
+        if let cachedResult = cache.getActionResult(for: cacheKey) {
+            print("📦 AIService: Using cached action result for \(actionType.rawValue)")
+            return cachedResult
+        }
+        
+        let data: [String: Any] = [
+            "actionType": actionType.rawValue,
+            "messageId": messageId,
+            "conversationId": conversationId,
+            "parameters": parameters
+        ]
+        
+        do {
+            print("🤖 AIService: Calling performMessageAction for \(actionType.rawValue)")
+            let result = try await functions.httpsCallable("performMessageAction").call(data)
+            
+            guard let resultData = result.data as? [String: Any] else {
+                throw AIError.invalidResponse
+            }
+            
+            let actionResult = try parseActionResult(from: resultData, actionType: actionType)
+            
+            // Cache the result
+            cache.setActionResult(actionResult, for: cacheKey)
+            
+            print("✅ AIService: Action \(actionType.rawValue) completed successfully")
+            return actionResult
+            
+        } catch {
+            print("❌ AIService: Action \(actionType.rawValue) failed: \(error)")
+            throw error
+        }
+    }
+    
+    private func parseActionResult(from data: [String: Any], actionType: MessageActionType) throws -> MessageActionResult {
+        guard let success = data["success"] as? Bool, success else {
+            let error = data["error"] as? String ?? "Unknown error"
+            throw AIError.actionFailed(error)
+        }
+        
+        guard let result = data["result"] as? [String: Any] else {
+            throw AIError.invalidResponse
+        }
+        
+        let originalText = result["originalText"] as? String ?? ""
+        let resultText = getResultText(from: result, actionType: actionType)
+        let metadata = result["metadata"] as? [String: Any] ?? [:]
+        
+        return MessageActionResult(
+            actionType: actionType,
+            originalText: originalText,
+            resultText: resultText,
+            metadata: metadata
+        )
+    }
+    
+    private func getResultText(from result: [String: Any], actionType: MessageActionType) -> String {
+        switch actionType {
+        case .translate:
+            return result["translatedText"] as? String ?? ""
+        case .rewrite:
+            return result["rewrittenText"] as? String ?? ""
+        case .extract:
+            if let entities = result["entities"] as? [String: Any] {
+                return formatEntities(entities)
+            }
+            return ""
+        case .summarize:
+            return result["summary"] as? String ?? ""
+        case .clarify:
+            return result["clarifiedText"] as? String ?? ""
+        case .expand:
+            return result["expandedText"] as? String ?? ""
+        case .shorten:
+            return result["shortenedText"] as? String ?? ""
+        }
+    }
+    
+    private func formatEntities(_ entities: [String: Any]) -> String {
+        var formattedText = ""
+        
+        if let dates = entities["dates"] as? [String], !dates.isEmpty {
+            formattedText += "📅 Dates: \(dates.joined(separator: ", "))\n"
+        }
+        
+        if let people = entities["people"] as? [String], !people.isEmpty {
+            formattedText += "👥 People: \(people.joined(separator: ", "))\n"
+        }
+        
+        if let organizations = entities["organizations"] as? [String], !organizations.isEmpty {
+            formattedText += "🏢 Organizations: \(organizations.joined(separator: ", "))\n"
+        }
+        
+        if let locations = entities["locations"] as? [String], !locations.isEmpty {
+            formattedText += "📍 Locations: \(locations.joined(separator: ", "))\n"
+        }
+        
+        if let topics = entities["topics"] as? [String], !topics.isEmpty {
+            formattedText += "💬 Topics: \(topics.joined(separator: ", "))\n"
+        }
+        
+        return formattedText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 // MARK: - AI Cache
@@ -223,6 +365,7 @@ final class AICache {
     private var clarityCache: [String: AISuggestion] = [:]
     private var actionItemsCache: [String: [ActionItem]] = [:]
     private var toneAnalysisCache: [String: ToneAnalysisResult] = [:]
+    private var actionResultCache: [String: MessageActionResult] = [:]
     
     private let maxCacheSize = 100
     private let cacheExpirationTime: TimeInterval = 3600 // 1 hour
@@ -263,6 +406,15 @@ final class AICache {
         cleanupCache()
     }
     
+    func getActionResult(for key: String) -> MessageActionResult? {
+        return actionResultCache[key]
+    }
+    
+    func setActionResult(_ result: MessageActionResult, for key: String) {
+        actionResultCache[key] = result
+        cleanupCache()
+    }
+    
     private func cleanupCache() {
         // Simple LRU cleanup - remove oldest entries if cache is too large
         if summaryCache.count > maxCacheSize {
@@ -284,12 +436,5 @@ final class AICache {
             let keysToRemove = Array(toneAnalysisCache.keys.prefix(toneAnalysisCache.count - maxCacheSize))
             keysToRemove.forEach { toneAnalysisCache.removeValue(forKey: $0) }
         }
-    }
-    
-    func clearCache() {
-        summaryCache.removeAll()
-        clarityCache.removeAll()
-        actionItemsCache.removeAll()
-        toneAnalysisCache.removeAll()
     }
 }

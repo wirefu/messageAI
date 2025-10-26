@@ -22,6 +22,8 @@ struct ChatView: View {
     @State private var isGeneratingSummary = false
     @State private var showingAutoTriggerPrompt = false
     @State private var showingActionItems = false
+    @State private var showingMessageActionSheet = false
+    @State private var selectedMessageForAction: Message?
     
     private let summaryRepository = SummaryRepository()
     private let autoTriggerService = SummaryAutoTriggerService.shared
@@ -53,7 +55,11 @@ struct ChatView: View {
                             ForEach(viewModel.messages) { message in
                                 MessageBubbleView(
                                     message: message,
-                                    isFromCurrentUser: message.isFromCurrentUser(currentUserID)
+                                    isFromCurrentUser: message.isFromCurrentUser(currentUserID),
+                                    onLongPress: {
+                                        selectedMessageForAction = message
+                                        showingMessageActionSheet = true
+                                    }
                                 )
                                 .id(message.id)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -132,6 +138,18 @@ struct ChatView: View {
         }
         .sheet(isPresented: $showingActionItems) {
             ActionItemsView(conversationID: conversation.id)
+        }
+        .sheet(isPresented: $showingMessageActionSheet) {
+            if let message = selectedMessageForAction {
+                MessageActionSheet(
+                    messageId: message.id,
+                    conversationId: conversation.id,
+                    onDismiss: {
+                        showingMessageActionSheet = false
+                        selectedMessageForAction = nil
+                    }
+                )
+            }
         }
         .alert("Catch Up with Summary", isPresented: $showingAutoTriggerPrompt) {
             Button("View Summary") {

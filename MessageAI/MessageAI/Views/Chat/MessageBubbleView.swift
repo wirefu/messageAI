@@ -12,6 +12,13 @@ import SwiftUI
 struct MessageBubbleView: View {
     let message: Message
     let isFromCurrentUser: Bool
+    let onLongPress: (() -> Void)?
+    
+    init(message: Message, isFromCurrentUser: Bool, onLongPress: (() -> Void)? = nil) {
+        self.message = message
+        self.isFromCurrentUser = isFromCurrentUser
+        self.onLongPress = onLongPress
+    }
     
     var body: some View {
         HStack {
@@ -25,6 +32,9 @@ struct MessageBubbleView: View {
                     .background(isFromCurrentUser ? Color.blue : Color(.systemGray5))
                     .foregroundColor(isFromCurrentUser ? .white : .primary)
                     .cornerRadius(AppConstants.UIConfig.messageBubbleRadius)
+                    .onLongPressGesture {
+                        onLongPress?()
+                    }
                 
                 HStack(spacing: 4) {
                     Text(message.timestamp.timeString())

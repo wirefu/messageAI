@@ -36,11 +36,5 @@ struct MainTabView: View {
         .sheet(isPresented: $onboardingManager.shouldShowOnboarding) {
             AIFeaturesOnboardingView(isPresented: $onboardingManager.shouldShowOnboarding)
         }
-        #if DEBUG
-        .overlay(alignment: .topTrailing) {
-            CostMonitorView()
-                .padding()
-        }
-        #endif
     }
 }
