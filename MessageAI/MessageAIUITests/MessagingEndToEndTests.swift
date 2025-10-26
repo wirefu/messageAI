@@ -9,6 +9,7 @@
 import XCTest
 
 /// End-to-end tests for complete messaging flow
+@MainActor
 final class MessagingEndToEndTests: XCTestCase {
     var app: XCUIApplication!
     

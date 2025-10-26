@@ -9,6 +9,7 @@
 import XCTest
 
 /// UI tests for Action Items feature (PR #21/23)
+@MainActor
 final class ActionItemsUITests: XCTestCase {
     var app: XCUIApplication!
     

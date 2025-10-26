@@ -8,6 +8,7 @@
 
 import XCTest
 
+@MainActor
 final class ConversationListUITests: XCTestCase {
     var app: XCUIApplication!
     

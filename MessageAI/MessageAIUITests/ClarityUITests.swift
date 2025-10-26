@@ -9,6 +9,7 @@
 import XCTest
 
 /// UI tests for Clarity Assistant feature (PR #20)
+@MainActor
 final class ClarityUITests: XCTestCase {
     var app: XCUIApplication!
     

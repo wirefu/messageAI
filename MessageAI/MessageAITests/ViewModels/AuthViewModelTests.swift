@@ -9,6 +9,7 @@
 import XCTest
 @testable import MessageAI
 
+@MainActor
 final class AuthViewModelTests: XCTestCase {
     var sut: AuthViewModel!
     var mockUserRepository: MockUserRepository!

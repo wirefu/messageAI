@@ -10,6 +10,7 @@ import XCTest
 @testable import MessageAI
 
 /// Integration tests for Action Items feature (PR #21/23)
+@MainActor
 final class ActionItemsIntegrationTests: XCTestCase {
     var aiService: AIService!
     var repository: ActionItemRepository!

@@ -9,6 +9,7 @@
 import XCTest
 @testable import MessageAI
 
+@MainActor
 final class ConversationListViewModelTests: XCTestCase {
     var sut: ConversationListViewModel!
     var mockRepository: MockConversationRepository!

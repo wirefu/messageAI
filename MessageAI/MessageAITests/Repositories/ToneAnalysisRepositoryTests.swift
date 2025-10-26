@@ -3,21 +3,22 @@ import FirebaseFunctions
 @testable import MessageAI
 
 /// Unit tests for ToneAnalysisRepository
+@MainActor
 final class ToneAnalysisRepositoryTests: XCTestCase {
     var repository: ToneAnalysisRepository!
     var mockFunctions: MockFunctions!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mockFunctions = MockFunctions()
         repository = ToneAnalysisRepository()
         // Note: In a real test, we'd inject the mock functions
     }
     
-    override func tearDown() {
+    override func tearDown() async throws {
         repository = nil
         mockFunctions = nil
-        super.tearDown()
+        try await super.tearDown()
     }
     
     // MARK: - Tone Analysis Tests

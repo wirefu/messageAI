@@ -8,6 +8,7 @@
 
 import XCTest
 
+@MainActor
 final class AuthenticationUITests: XCTestCase {
     var app: XCUIApplication!
     

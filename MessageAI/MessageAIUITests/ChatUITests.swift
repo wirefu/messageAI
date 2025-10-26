@@ -8,6 +8,7 @@
 
 import XCTest
 
+@MainActor
 final class ChatUITests: XCTestCase {
     var app: XCUIApplication!
     

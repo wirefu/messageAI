@@ -9,6 +9,7 @@
 import XCTest
 
 /// UI tests for Smart Summarization feature (PR #18)
+@MainActor
 final class SummarizationUITests: XCTestCase {
     var app: XCUIApplication!
     

@@ -17,6 +17,7 @@ final class ToneAnalysisUITests: XCTestCase {
     
     // MARK: - Tone Analysis UI Tests
     
+    @MainActor
     func testToneAnalysisShowsForTerseMessage() throws {
         // Given: User is in a chat
         try loginAndNavigateToChat()
@@ -35,6 +36,7 @@ final class ToneAnalysisUITests: XCTestCase {
         XCTAssertTrue(toneWarning.firstMatch.exists)
     }
     
+    @MainActor
     func testToneAnalysisShowsAlternativePhrasing() throws {
         // Given: User is in a chat
         try loginAndNavigateToChat()
@@ -57,6 +59,7 @@ final class ToneAnalysisUITests: XCTestCase {
         XCTAssertTrue(usePhrasingButton.exists)
     }
     
+    @MainActor
     func testToneAnalysisDismissal() throws {
         // Given: User is in a chat with tone analysis showing
         try loginAndNavigateToChat()
@@ -77,6 +80,7 @@ final class ToneAnalysisUITests: XCTestCase {
         XCTAssertFalse(toneAnalysis.exists)
     }
     
+    @MainActor
     func testToneAnalysisSeverityLevels() throws {
         // Given: User is in a chat
         try loginAndNavigateToChat()
@@ -112,6 +116,7 @@ final class ToneAnalysisUITests: XCTestCase {
         }
     }
     
+    @MainActor
     func testToneAnalysisWithContext() throws {
         // Given: User is in a chat with previous context
         try loginAndNavigateToChat()
@@ -140,6 +145,7 @@ final class ToneAnalysisUITests: XCTestCase {
         XCTAssertTrue(improvementTips.firstMatch.exists)
     }
     
+    @MainActor
     func testToneAnalysisImprovementSuggestions() throws {
         // Given: User is in a chat
         try loginAndNavigateToChat()
@@ -164,6 +170,7 @@ final class ToneAnalysisUITests: XCTestCase {
     
     // MARK: - Helper Methods
     
+    @MainActor
     private func loginAndNavigateToChat() throws {
         // Login (assuming test user exists)
         let emailField = app.textFields["Email"]
@@ -192,6 +199,7 @@ final class ToneAnalysisUITests: XCTestCase {
         XCTAssertTrue(messageInput.waitForExistence(timeout: 5))
     }
     
+    @MainActor
     private func waitForMessageToAppear(_ messageText: String) throws {
         let messageBubble = app.staticTexts[messageText]
         XCTAssertTrue(messageBubble.waitForExistence(timeout: 10))
