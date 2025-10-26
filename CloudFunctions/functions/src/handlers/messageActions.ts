@@ -23,6 +23,7 @@ interface MessageActionPayload {
     targetLanguage?: string;
     tone?: 'formal' | 'casual' | 'technical' | 'friendly';
     sourceLanguage?: string;
+    messageContent?: string; // For AI chat messages
   };
 }
 
@@ -129,24 +130,37 @@ async function translateMessage(
 ): Promise<any> {
   const db = admin.firestore();
   
-  // Fetch message from Firestore
-  const messageDoc = await db
-    .collection('conversations')
-    .doc(payload.conversationId)
-    .collection('messages')
-    .doc(payload.messageId)
-    .get();
+  let messageText = '';
+  
+  // Handle AI chat messages differently
+  if (payload.conversationId === 'ai-chat') {
+    // For AI chat, we need to get the message content from the client
+    // Since we can't fetch from Firestore, we'll need to pass it in the payload
+    messageText = payload.parameters?.messageContent || '';
+    if (!messageText) {
+      throw new Error('Message content not provided for AI chat');
+    }
+  } else {
+    // Fetch message from Firestore for regular conversations
+    const messageDoc = await db
+      .collection('conversations')
+      .doc(payload.conversationId)
+      .collection('messages')
+      .doc(payload.messageId)
+      .get();
+      
+    if (!messageDoc.exists) {
+      throw new Error('Message not found');
+    }
     
-  if (!messageDoc.exists) {
-    throw new Error('Message not found');
+    const messageData = messageDoc.data();
+    if (!messageData) {
+      throw new Error('Message data not found');
+    }
+    
+    messageText = messageData.content || '';
   }
   
-  const messageData = messageDoc.data();
-  if (!messageData) {
-    throw new Error('Message data not found');
-  }
-  
-  const messageText = messageData.content || '';
   const targetLanguage = payload.parameters?.targetLanguage || 'Spanish';
   const sourceLanguage = payload.parameters?.sourceLanguage || 'auto';
   
@@ -182,24 +196,35 @@ async function rewriteMessage(
 ): Promise<any> {
   const db = admin.firestore();
   
-  // Fetch message from Firestore
-  const messageDoc = await db
-    .collection('conversations')
-    .doc(payload.conversationId)
-    .collection('messages')
-    .doc(payload.messageId)
-    .get();
+  let messageText = '';
+  
+  // Handle AI chat messages differently
+  if (payload.conversationId === 'ai-chat') {
+    messageText = payload.parameters?.messageContent || '';
+    if (!messageText) {
+      throw new Error('Message content not provided for AI chat');
+    }
+  } else {
+    // Fetch message from Firestore for regular conversations
+    const messageDoc = await db
+      .collection('conversations')
+      .doc(payload.conversationId)
+      .collection('messages')
+      .doc(payload.messageId)
+      .get();
+      
+    if (!messageDoc.exists) {
+      throw new Error('Message not found');
+    }
     
-  if (!messageDoc.exists) {
-    throw new Error('Message not found');
+    const messageData = messageDoc.data();
+    if (!messageData) {
+      throw new Error('Message data not found');
+    }
+    
+    messageText = messageData.content || '';
   }
   
-  const messageData = messageDoc.data();
-  if (!messageData) {
-    throw new Error('Message data not found');
-  }
-  
-  const messageText = messageData.content || '';
   const tone = payload.parameters?.tone || 'formal';
   
   // Create tone-specific system prompts
@@ -237,24 +262,34 @@ async function extractEntities(
 ): Promise<any> {
   const db = admin.firestore();
   
-  // Fetch message from Firestore
-  const messageDoc = await db
-    .collection('conversations')
-    .doc(payload.conversationId)
-    .collection('messages')
-    .doc(payload.messageId)
-    .get();
+  let messageText = '';
+  
+  // Handle AI chat messages differently
+  if (payload.conversationId === 'ai-chat') {
+    messageText = payload.parameters?.messageContent || '';
+    if (!messageText) {
+      throw new Error('Message content not provided for AI chat');
+    }
+  } else {
+    // Fetch message from Firestore for regular conversations
+    const messageDoc = await db
+      .collection('conversations')
+      .doc(payload.conversationId)
+      .collection('messages')
+      .doc(payload.messageId)
+      .get();
+      
+    if (!messageDoc.exists) {
+      throw new Error('Message not found');
+    }
     
-  if (!messageDoc.exists) {
-    throw new Error('Message not found');
+    const messageData = messageDoc.data();
+    if (!messageData) {
+      throw new Error('Message data not found');
+    }
+    
+    messageText = messageData.content || '';
   }
-  
-  const messageData = messageDoc.data();
-  if (!messageData) {
-    throw new Error('Message data not found');
-  }
-  
-  const messageText = messageData.content || '';
   
   // Create system prompt for entity extraction
   const systemPrompt = `Extract the following entities from the message and return them as a JSON object:

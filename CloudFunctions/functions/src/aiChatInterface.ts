@@ -14,7 +14,7 @@ export const aiChatInterface = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
   }
 
-  const { message, sessionId, conversationId } = data;
+  const { message, sessionId, conversationId, conversationContext = [] } = data;
   const userId = context.auth.uid;
 
   if (!message || message.trim().length === 0) {
@@ -26,12 +26,13 @@ export const aiChatInterface = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    // Process the AI chat message
+    // Process the AI chat message with conversation context
     const result = await aiChatService.processChatMessage(
       userId,
       message,
       sessionId,
-      conversationId
+      conversationId,
+      conversationContext
     );
 
     // Log the interaction for analytics

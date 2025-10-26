@@ -15,6 +15,8 @@ struct AIChatView: View {
     
     @StateObject private var viewModel = AIChatViewModel()
     @FocusState private var isInputFocused: Bool
+    @State private var showingMessageActionSheet = false
+    @State private var selectedMessageForAction: AIChatMessage?
     
     // MARK: - Body
     
@@ -51,6 +53,17 @@ struct AIChatView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
+            .sheet(isPresented: $showingMessageActionSheet) {
+                if let message = selectedMessageForAction {
+                    AIMessageActionSheet(
+                        message: message,
+                        onDismiss: {
+                            showingMessageActionSheet = false
+                            selectedMessageForAction = nil
+                        }
+                    )
+                }
+            }
         }
     }
     
@@ -76,7 +89,11 @@ struct AIChatView: View {
                                 timestamp: message.timestamp,
                                 sources: nil
                             ),
-                            isFromCurrentUser: message.role == .user
+                            isFromCurrentUser: message.role == .user,
+                            onLongPress: {
+                                selectedMessageForAction = message
+                                showingMessageActionSheet = true
+                            }
                         )
                         .id(message.id)
                     }

@@ -43,6 +43,7 @@ final class AIChatViewModel: ObservableObject {
     // MARK: - Private Properties
     
     private let db = Firestore.firestore()
+    private let messageRepository = MessageRepository()
     private var listener: ListenerRegistration?
     
     // MARK: - Initialization
@@ -127,15 +128,68 @@ final class AIChatViewModel: ObservableObject {
         isSessionActive = true
     }
     
+    /// Get conversation context from recent messages across all conversations
+    private func getConversationContext() async -> [[String: Any]] {
+        do {
+            // Get all conversations for the current user
+            let conversationsSnapshot = try await db.collection("conversations")
+                .whereField("participants", arrayContains: "current-user") // TODO: Replace with actual user ID
+                .getDocuments()
+            
+            var allContext: [[String: Any]] = []
+            
+            // Get recent messages from each conversation
+            for conversationDoc in conversationsSnapshot.documents {
+                let conversationId = conversationDoc.documentID
+                
+                do {
+                    // Get recent messages for AI context (last 5 messages per conversation)
+                    let recentMessages = try await messageRepository.getAIContext(for: conversationId, limit: 5)
+                    
+                    // Convert messages to context format
+                    let conversationContext = recentMessages.map { message in
+                        [
+                            "id": message.id,
+                            "content": message.content,
+                            "senderId": message.senderID,
+                            "timestamp": message.timestamp.timeIntervalSince1970,
+                            "conversationId": conversationId
+                        ]
+                    }
+                    
+                    allContext.append(contentsOf: conversationContext)
+                } catch {
+                    print("Failed to get context for conversation \(conversationId): \(error)")
+                    // Continue with other conversations
+                }
+            }
+            
+            // Sort by timestamp (most recent first) and limit to last 20 messages
+            let sortedContext = allContext.sorted { 
+                ($0["timestamp"] as? TimeInterval ?? 0) > ($1["timestamp"] as? TimeInterval ?? 0) 
+            }
+            
+            return Array(sortedContext.prefix(20))
+            
+        } catch {
+            print("Failed to get conversation context: \(error)")
+            return []
+        }
+    }
+    
     private func callAIChatInterface(_ userMessage: AIChatMessage) async {
         do {
             // Import Firebase Functions
             let functions = Functions.functions()
             
+            // Get conversation context from recent messages
+            let conversationContext = await getConversationContext()
+            
             // Prepare the data for the Cloud Function
             let data: [String: Any] = [
                 "message": userMessage.content,
-                "sessionId": userMessage.sessionID
+                "sessionId": userMessage.sessionID,
+                "conversationContext": conversationContext
             ]
             
             // Call the aiChatInterface Cloud Function

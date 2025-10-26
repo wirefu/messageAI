@@ -1,5 +1,5 @@
 //
-//  MessageActionSheet.swift
+//  AIMessageActionSheet.swift
 //  MessageAI
 //
 //  Created by Gauntlet AI Team
@@ -8,14 +8,13 @@
 
 import SwiftUI
 
-/// Message Action Sheet
-/// Bottom sheet UI for message actions (Translate, Rewrite, Extract, Summarize)
-struct MessageActionSheet: View {
+/// AI Message Action Sheet
+/// Bottom sheet UI for AI message actions (Translate, Rewrite, Extract, Summarize)
+struct AIMessageActionSheet: View {
     
     // MARK: - Properties
     
-    let messageId: String
-    let conversationId: String
+    let message: AIChatMessage
     let onDismiss: () -> Void
     
     @State private var selectedAction: MessageActionType?
@@ -241,10 +240,9 @@ struct MessageActionSheet: View {
         
         Task {
             do {
-                let result = try await performMessageAction(
+                let result = try await performAIMessageAction(
                     action: action,
-                    messageId: messageId,
-                    conversationId: conversationId,
+                    message: message,
                     parameters: getActionParameters()
                 )
                 
@@ -264,42 +262,26 @@ struct MessageActionSheet: View {
     
     // MARK: - Action Execution
     
-    private func performMessageAction(
+    private func performAIMessageAction(
         action: MessageActionType,
-        messageId: String,
-        conversationId: String,
+        message: AIChatMessage,
         parameters: [String: Any]
     ) async throws -> MessageActionResult {
-        // Call the AIService to perform the action
+        // For AI messages, we'll use the AIService directly with the message content
+        // instead of trying to fetch from Firestore
         return try await AIService.shared.performMessageAction(
             actionType: action,
-            messageId: messageId,
-            conversationId: conversationId,
+            messageId: message.id,
+            conversationId: "ai-chat", // Special ID for AI chat
             parameters: parameters
         )
     }
     
-    private func getMockResultText(for action: MessageActionType) -> String {
-        switch action {
-        case .translate:
-            return "Este es un mensaje de muestra para propósitos de prueba."
-        case .rewrite:
-            return "This represents a sample message designed for testing purposes."
-        case .extract:
-            return "Entities: [sample, message, testing, purposes]"
-        case .summarize:
-            return "This is a summary of the conversation thread."
-        case .clarify:
-            return "This is a clearer version of the message with improved wording."
-        case .expand:
-            return "This is an expanded version with additional details and context."
-        case .shorten:
-            return "This is a concise version."
-        }
-    }
-    
     private func getActionParameters() -> [String: Any] {
         var parameters: [String: Any] = [:]
+        
+        // Always include message content for AI chat
+        parameters["messageContent"] = message.content
         
         if selectedAction == .translate {
             parameters["targetLanguage"] = "Spanish"
@@ -331,19 +313,147 @@ struct MessageActionSheet: View {
 }
 
 // MARK: - Supporting Views
-// Note: ActionButton, ToneButton, and ResultDisplayView are defined in AIMessageActionSheet.swift
+
+struct ActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(color)
+                
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 80)
+            .background(color.opacity(0.1))
+            .cornerRadius(12)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct ToneButton: View {
+    let tone: RewriteTone
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(tone.displayName)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text(tone.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding()
+            .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            .cornerRadius(8)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct ResultDisplayView: View {
+    let result: MessageActionResult
+    let onCopy: () -> Void
+    let onShare: () -> Void
+    let onSend: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Original Text (Collapsed)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Original")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Text(result.originalText)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .lineLimit(3)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(8)
+            
+            // Result Text (Expanded)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(result.actionType.displayName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Text(result.resultText)
+                    .font(.body)
+                    .foregroundColor(.primary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(8)
+            
+            // Action Buttons
+            HStack(spacing: 12) {
+                Button("Copy") {
+                    onCopy()
+                }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
+                
+                Button("Share") {
+                    onShare()
+                }
+                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity)
+                
+                Button("Send") {
+                    onSend()
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
 
 // MARK: - Supporting Types
 
 
-
 // MARK: - Preview
 
-struct MessageActionSheet_Previews: PreviewProvider {
+struct AIMessageActionSheet_Previews: PreviewProvider {
     static var previews: some View {
-        MessageActionSheet(
-            messageId: "test-message",
-            conversationId: "test-conversation",
+        AIMessageActionSheet(
+            message: AIChatMessage(
+                id: "test-message",
+                sessionID: "test-session",
+                userID: "test-user",
+                content: "This is a test message for the AI action sheet.",
+                role: .user,
+                timestamp: Date(),
+                aiMetadata: nil
+            ),
             onDismiss: {}
         )
     }

@@ -15,6 +15,15 @@ struct AIMessageBubbleView: View {
     
     let message: AIMessage
     let isFromCurrentUser: Bool
+    let onLongPress: (() -> Void)?
+    
+    // MARK: - Initialization
+    
+    init(message: AIMessage, isFromCurrentUser: Bool, onLongPress: (() -> Void)? = nil) {
+        self.message = message
+        self.isFromCurrentUser = isFromCurrentUser
+        self.onLongPress = onLongPress
+    }
     
     // MARK: - Body
     
@@ -35,6 +44,9 @@ struct AIMessageBubbleView: View {
                             .fill(isFromCurrentUser ? AIConstants.userMessageColor : AIConstants.assistantMessageColor)
                     )
                     .shadow(color: AIConstants.messageShadow, radius: 2, x: 0, y: 1)
+                    .onLongPressGesture {
+                        onLongPress?()
+                    }
                 
                 // Timestamp
                 Text(formatTimestamp(message.timestamp))

@@ -116,6 +116,28 @@ enum RewriteTone: String, Codable, CaseIterable {
     case friendly
     case professional
     case concise
+    
+    var displayName: String {
+        switch self {
+        case .formal: return "Formal"
+        case .casual: return "Casual"
+        case .technical: return "Technical"
+        case .friendly: return "Friendly"
+        case .professional: return "Professional"
+        case .concise: return "Concise"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .formal: return "Professional and business-like"
+        case .casual: return "Relaxed and conversational"
+        case .technical: return "Precise and detailed"
+        case .friendly: return "Warm and approachable"
+        case .professional: return "Polished and corporate"
+        case .concise: return "Brief and to the point"
+        }
+    }
 }
 
 /// Extracted entities from a message

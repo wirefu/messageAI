@@ -21,7 +21,8 @@ export class AIChatService {
     userId: string,
     message: string,
     sessionId: string,
-    conversationId?: string
+    conversationId?: string,
+    conversationContext: any[] = []
   ): Promise<{
     response: string,
     suggestions: Array<{type: string, suggestion: string, confidence: number}>,
@@ -29,8 +30,8 @@ export class AIChatService {
     context: string
   }> {
     try {
-      // Get conversation context
-      const context = await this.assembleContext(userId, message, conversationId);
+      // Get conversation context (combine with provided context)
+      const context = await this.assembleContext(userId, message, conversationId, conversationContext);
       
       // Get chat history
       const chatHistory = await this.getChatHistory(sessionId);
@@ -244,13 +245,22 @@ export class AIChatService {
   private async assembleContext(
     userId: string,
     message: string,
-    conversationId?: string
+    conversationId?: string,
+    conversationContext: any[] = []
   ): Promise<string> {
     try {
       let context = '';
 
-      // Get recent messages from current conversation
-      if (conversationId) {
+      // Use provided conversation context first (from frontend)
+      if (conversationContext.length > 0) {
+        const contextMessages = conversationContext.map(ctx => 
+          `[${ctx.senderId === 'current-user' ? 'You' : 'Other'}] ${ctx.content}`
+        ).join('\n');
+        context += `Previous conversation context:\n${contextMessages}\n\n`;
+      }
+
+      // Get recent messages from current conversation (if not already provided)
+      if (conversationId && conversationContext.length === 0) {
         const recentMessages = await this.getConversationMessages(conversationId, 5);
         context += `Recent conversation context: ${recentMessages.map(m => m.content).join(' ')}\n`;
       }
