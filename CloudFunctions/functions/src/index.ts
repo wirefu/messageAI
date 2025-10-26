@@ -336,3 +336,49 @@ export {
   performMessageAction
 } from './handlers/messageActions';
 
+// Export Proactive Suggestions
+export {
+  generateProactiveSuggestions
+} from './handlers/proactiveSuggestions';
+
+/**
+ * Proactive Suggestions - Callable Function
+ * Generates proactive suggestions for the authenticated user
+ */
+export const checkProactiveSuggestions = functions.https.onCall(async (data, context) => {
+  // Check authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const userId = context.auth.uid;
+  
+  try {
+    console.log(`🔍 Checking proactive suggestions for user: ${userId}`);
+    
+    // Import the handler function
+    const { generateProactiveSuggestions } = await import('./handlers/proactiveSuggestions');
+    
+    // Generate suggestions
+    const suggestion = await generateProactiveSuggestions(userId);
+    
+    if (suggestion) {
+      console.log(`✅ Generated suggestion for user: ${userId}, type: ${suggestion.type}`);
+      return {
+        success: true,
+        suggestion: suggestion
+      };
+    } else {
+      console.log(`📭 No suggestions generated for user: ${userId}`);
+      return {
+        success: true,
+        suggestion: null
+      };
+    }
+    
+  } catch (error) {
+    console.error(`❌ Error checking proactive suggestions for user ${userId}:`, error);
+    throw new functions.https.HttpsError('internal', 'Failed to check proactive suggestions');
+  }
+});
+

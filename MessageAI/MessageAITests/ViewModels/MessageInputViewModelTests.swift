@@ -10,7 +10,6 @@ import XCTest
 @testable import MessageAI
 
 /// Tests for MessageInputViewModel
-@MainActor
 final class MessageInputViewModelTests: XCTestCase {
     var sut: MessageInputViewModel!
     

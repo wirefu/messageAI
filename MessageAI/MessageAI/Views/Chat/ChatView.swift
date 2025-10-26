@@ -14,6 +14,7 @@ struct ChatView: View {
     let currentUserID: String
     
     @StateObject private var viewModel: ChatViewModel
+    @StateObject private var suggestionViewModel: SuggestionViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var messageText = ""
     @State private var otherUser: User?
@@ -35,10 +36,28 @@ struct ChatView: View {
             conversationID: conversation.id,
             currentUserID: currentUserID
         ))
+        _suggestionViewModel = StateObject(wrappedValue: SuggestionViewModel(userId: currentUserID))
     }
     
     var body: some View {
         VStack(spacing: 0) {
+            // Proactive Suggestion Banner
+            if let suggestion = suggestionViewModel.activeSuggestion {
+                ProactiveSuggestionBanner(
+                    suggestion: suggestion,
+                    onDismiss: {
+                        Task {
+                            await suggestionViewModel.dismissSuggestion(id: suggestion.id)
+                        }
+                    },
+                    onTakeAction: {
+                        Task {
+                            await suggestionViewModel.takeSuggestionAction(id: suggestion.id, action: suggestion.actionText)
+                        }
+                    }
+                )
+            }
+            
             // Messages List
             ScrollViewReader { proxy in
                 ScrollView {
@@ -168,6 +187,7 @@ struct ChatView: View {
             await loadOtherUser()
             await viewModel.markMessagesAsRead()
             checkAutoTrigger()
+            await suggestionViewModel.checkForSuggestions()
         }
         .onDisappear {
             viewModel.stopObserving()

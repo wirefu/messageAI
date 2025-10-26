@@ -3,7 +3,6 @@ import FirebaseFunctions
 @testable import MessageAI
 
 /// Unit tests for ToneAnalysisRepository
-@MainActor
 final class ToneAnalysisRepositoryTests: XCTestCase {
     var repository: ToneAnalysisRepository!
     var mockFunctions: MockFunctions!

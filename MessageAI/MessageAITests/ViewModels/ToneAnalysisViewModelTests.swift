@@ -7,16 +7,16 @@ final class ToneAnalysisViewModelTests: XCTestCase {
     var viewModel: ToneAnalysisViewModel!
     var mockRepository: MockToneAnalysisRepositoryViewModel!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mockRepository = MockToneAnalysisRepositoryViewModel()
         viewModel = ToneAnalysisViewModel(toneRepository: mockRepository)
     }
     
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
         mockRepository = nil
-        super.tearDown()
+        try await super.tearDown()
     }
     
     // MARK: - Analysis Tests

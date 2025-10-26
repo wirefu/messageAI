@@ -10,7 +10,6 @@ import XCTest
 @testable import MessageAI
 
 /// Tests for ActionItemRepository
-@MainActor
 final class ActionItemRepositoryTests: XCTestCase {
     var sut: ActionItemRepository!
     

@@ -8,6 +8,7 @@
 
 import XCTest
 
+@MainActor
 final class MessageActionsUITests: XCTestCase {
     
     var app: XCUIApplication!
@@ -76,7 +77,7 @@ final class MessageActionsUITests: XCTestCase {
         } else {
             // If no messages exist, create one first
             createTestMessage()
-            testMessageActionSheetPresentation()
+            try testMessageActionSheetPresentation()
         }
     }
     
@@ -113,7 +114,7 @@ final class MessageActionsUITests: XCTestCase {
             app.buttons["Done"].tap()
         } else {
             createTestMessage()
-            testTranslateAction()
+            try testTranslateAction()
         }
     }
     
@@ -158,7 +159,7 @@ final class MessageActionsUITests: XCTestCase {
             app.buttons["Done"].tap()
         } else {
             createTestMessage()
-            testRewriteAction()
+            try testRewriteAction()
         }
     }
     
@@ -190,7 +191,7 @@ final class MessageActionsUITests: XCTestCase {
             app.buttons["Done"].tap()
         } else {
             createTestMessage()
-            testExtractAction()
+            try testExtractAction()
         }
     }
     
@@ -222,7 +223,7 @@ final class MessageActionsUITests: XCTestCase {
             app.buttons["Done"].tap()
         } else {
             createTestMessage()
-            testSummarizeAction()
+            try testSummarizeAction()
         }
     }
     

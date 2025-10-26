@@ -10,7 +10,6 @@ import XCTest
 @testable import MessageAI
 
 /// Unit tests for SummaryRepository
-@MainActor
 final class SummaryRepositoryTests: XCTestCase {
     var sut: SummaryRepository!
     
