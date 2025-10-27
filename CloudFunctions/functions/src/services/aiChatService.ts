@@ -265,10 +265,30 @@ export class AIChatService {
         context += `Recent conversation context: ${recentMessages.map(m => m.content).join(' ')}\n`;
       }
 
-      // Search for related messages across all conversations
-      const relatedMessages = await vectorDB.searchSimilarMessages(message, userId, 5);
-      if (relatedMessages.length > 0) {
-        context += `Related messages from other conversations: ${relatedMessages.map(m => m.content).join(' ')}\n`;
+      // Get user data (action items, tasks, etc.)
+      console.log('🔍 Getting user data for userId:', userId);
+      const userData = await this.getUserData(userId);
+      console.log('📊 User data retrieved:', { actionItemsCount: userData.actionItems?.length || 0 });
+      
+      if (userData.actionItems && userData.actionItems.length > 0) {
+        const actionItemsText = userData.actionItems.map(item => 
+          `- ${item.description}${item.isCompleted ? ' (COMPLETED)' : ''}${item.dueDate ? ` (Due: ${new Date(item.dueDate).toLocaleDateString()})` : ''}`
+        ).join('\n');
+        context += `\nUser's Action Items:\n${actionItemsText}\n\n`;
+        console.log('✅ Added action items to context:', actionItemsText);
+      } else {
+        console.log('❌ No action items found for user');
+      }
+
+      // Search for related messages across all conversations (optional - don't fail if Bedrock is down)
+      try {
+        const relatedMessages = await vectorDB.searchSimilarMessages(message, userId, 5);
+        if (relatedMessages.length > 0) {
+          context += `Related messages from other conversations: ${relatedMessages.map(m => m.content).join(' ')}\n`;
+        }
+      } catch (error) {
+        console.log('Vector search failed (Bedrock may be down), continuing without it:', (error as Error).message);
+        // Continue without vector search - don't let this break the entire context assembly
       }
 
       return context;
@@ -331,6 +351,49 @@ export class AIChatService {
       await aiCache.cacheChatSession(sessionId, updatedHistory);
     } catch (error) {
       console.error('Error updating chat history:', error);
+    }
+  }
+
+  /**
+   * Get user data (action items, tasks, etc.) from Firestore
+   */
+  private async getUserData(userId: string): Promise<{actionItems: any[]}> {
+    try {
+      // Get all conversations for the user
+      const conversationsSnapshot = await this.db
+        .collection('conversations')
+        .where('participants', 'array-contains', userId)
+        .get();
+
+      const allActionItems: any[] = [];
+
+      // Get action items from all conversations
+      for (const conversationDoc of conversationsSnapshot.docs) {
+        const conversationId = conversationDoc.id;
+        
+        const actionItemsSnapshot = await this.db
+          .collection('conversations')
+          .doc(conversationId)
+          .collection('actionItems')
+          .get();
+
+        for (const actionItemDoc of actionItemsSnapshot.docs) {
+          const data = actionItemDoc.data();
+          allActionItems.push({
+            id: actionItemDoc.id,
+            description: data.description || '',
+            assignedTo: data.assignedTo || '',
+            dueDate: data.dueDate?.toDate()?.getTime() || 0,
+            isCompleted: data.isCompleted || false,
+            conversationId: conversationId
+          });
+        }
+      }
+
+      return { actionItems: allActionItems };
+    } catch (error) {
+      console.error('Error getting user data:', error);
+      return { actionItems: [] };
     }
   }
 

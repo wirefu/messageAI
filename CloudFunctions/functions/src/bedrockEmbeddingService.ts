@@ -1,6 +1,7 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { BedrockClient, ListFoundationModelsCommand } from '@aws-sdk/client-bedrock';
 import * as functions from 'firebase-functions';
+import { BedrockConfig } from './bedrockConfig';
 
 /**
  * Amazon Bedrock Embedding Service
@@ -9,12 +10,12 @@ import * as functions from 'firebase-functions';
 export class BedrockEmbeddingService {
   private bedrockRuntime: BedrockRuntimeClient;
   private bedrock: BedrockClient;
-  // private readonly _region: string;
+  private bedrockConfig: BedrockConfig;
 
   constructor(_region: string = 'us-east-1') {
-    // this._region = _region;
-    this.bedrockRuntime = new BedrockRuntimeClient({ region: _region });
-    this.bedrock = new BedrockClient({ region: _region });
+    this.bedrockConfig = BedrockConfig.getInstance();
+    this.bedrockRuntime = this.bedrockConfig.getBedrockRuntimeClient();
+    this.bedrock = this.bedrockConfig.getBedrockManagementClient();
   }
 
   /**

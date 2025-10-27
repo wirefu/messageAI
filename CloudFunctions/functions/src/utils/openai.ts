@@ -32,7 +32,12 @@ export class OpenAIService {
 
     try {
       const systemMessage = context 
-        ? `You are an AI assistant for a team messaging app. Use this context to provide helpful responses: ${context}`
+        ? `You are an AI assistant for a team messaging app. You have access to the user's conversation history, action items, and other data. Use this information to provide helpful, contextual responses.
+
+CONTEXT PROVIDED:
+${context}
+
+Based on this context, answer the user's questions, provide insights about their action items, and suggest relevant actions. Always acknowledge that you have access to their data when relevant.`
         : 'You are an AI assistant for a team messaging app. Help users with their conversations, provide insights, and suggest actions.';
 
       const chatMessages = [

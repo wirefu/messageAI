@@ -1,5 +1,6 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import * as functions from 'firebase-functions';
+import { BedrockConfig } from './bedrockConfig';
 
 /**
  * Amazon Bedrock Vector Search Service
@@ -7,11 +8,11 @@ import * as functions from 'firebase-functions';
  */
 export class BedrockVectorSearchService {
   private bedrockRuntime: BedrockRuntimeClient;
-  // private readonly _region: string;
+  private bedrockConfig: BedrockConfig;
 
   constructor(_region: string = 'us-east-1') {
-    // this._region = _region;
-    this.bedrockRuntime = new BedrockRuntimeClient({ region: _region });
+    this.bedrockConfig = BedrockConfig.getInstance();
+    this.bedrockRuntime = this.bedrockConfig.getBedrockRuntimeClient();
   }
 
   /**

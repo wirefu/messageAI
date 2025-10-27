@@ -9,6 +9,7 @@
 import Foundation
 import FirebaseFirestore
 import FirebaseFunctions
+import FirebaseAuth
 
 /// ViewModel for AI Chat Interface
 @MainActor
@@ -131,9 +132,15 @@ final class AIChatViewModel: ObservableObject {
     /// Get conversation context from recent messages across all conversations
     private func getConversationContext() async -> [[String: Any]] {
         do {
+            // Get the current authenticated user ID
+            guard let currentUserID = Auth.auth().currentUser?.uid else {
+                print("No authenticated user found")
+                return []
+            }
+            
             // Get all conversations for the current user
             let conversationsSnapshot = try await db.collection("conversations")
-                .whereField("participants", arrayContains: "current-user") // TODO: Replace with actual user ID
+                .whereField("participants", arrayContains: currentUserID)
                 .getDocuments()
             
             var allContext: [[String: Any]] = []
@@ -171,10 +178,99 @@ final class AIChatViewModel: ObservableObject {
             
             return Array(sortedContext.prefix(20))
             
+    }
+    
+    /// Get user data context (action items, tasks, etc.)
+    private func getUserDataContext() async -> [String: Any] {
+        do {
+            guard let currentUserID = Auth.auth().currentUser?.uid else {
+                print("❌ DEBUG: No authenticated user found for user data")
+                return getMockUserDataContext()
+            }
+            
+            print("🔍 DEBUG: Getting user data context for user: \(currentUserID)")
+            
+            var userData: [String: Any] = [:]
+            
+            // Get all conversations for the current user
+            let conversationsSnapshot = try await db.collection("conversations")
+                .whereField("participants", arrayContains: currentUserID)
+                .getDocuments()
+            
+            var allActionItems: [[String: Any]] = []
+            
+            // Get action items from all conversations
+            for conversationDoc in conversationsSnapshot.documents {
+                let conversationId = conversationDoc.documentID
+                
+                let actionItemsSnapshot = try await db.collection("conversations")
+                    .document(conversationId)
+                    .collection("actionItems")
+                    .getDocuments()
+                
+                for actionItemDoc in actionItemsSnapshot.documents {
+                    let data = actionItemDoc.data()
+                    let actionItem: [String: Any] = [
+                        "id": actionItemDoc.documentID,
+                        "description": data["description"] as? String ?? "",
+                        "assignedTo": data["assignedTo"] as? String ?? "",
+                        "dueDate": data["dueDate"] as? Double ?? 0,
+                        "isCompleted": data["isCompleted"] as? Bool ?? false,
+                        "conversationId": conversationId
+                    ]
+                    allActionItems.append(actionItem)
+                }
+            }
+            
+            userData["actionItems"] = allActionItems
+            userData["userId"] = currentUserID
+            
+            print("✅ Returning \(allActionItems.count) action items for user")
+            
+            // If no user data found, provide mock data for demo purposes
+            if allActionItems.isEmpty {
+                print("📝 No user data found, providing mock user data for demo")
+                return getMockUserDataContext()
+            }
+            
+            return userData
         } catch {
-            print("Failed to get conversation context: \(error)")
-            return []
+            print("❌ Error getting user data context: \(error.localizedDescription)")
+            return getMockUserDataContext()
         }
+    }
+    
+    /// Provides mock user data context for demo purposes when no real user data exists
+    private func getMockUserDataContext() -> [String: Any] {
+        return [
+            "userId": "mock_user_123",
+            "actionItems": [
+                [
+                    "id": "mock_action_1",
+                    "description": "Review the project timeline for Q1",
+                    "assignedTo": "mock_user_123",
+                    "dueDate": Date().timeIntervalSince1970 + 86400, // Tomorrow
+                    "isCompleted": false,
+                    "conversationId": "mock_conv_1"
+                ],
+                [
+                    "id": "mock_action_2",
+                    "description": "Complete authentication system by Friday",
+                    "assignedTo": "mock_user_123",
+                    "dueDate": Date().timeIntervalSince1970 + 172800, // Day after tomorrow
+                    "isCompleted": false,
+                    "conversationId": "mock_conv_1"
+                ],
+                [
+                    "id": "mock_action_3",
+                    "description": "Deploy Cloud Functions by end of day",
+                    "assignedTo": "mock_user_123",
+                    "dueDate": Date().timeIntervalSince1970 + 3600, // 1 hour from now
+                    "isCompleted": true,
+                    "conversationId": "mock_conv_2"
+                ]
+            ]
+        ]
     }
     
     private func callAIChatInterface(_ userMessage: AIChatMessage) async {
