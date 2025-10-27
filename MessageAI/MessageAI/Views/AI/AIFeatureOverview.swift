@@ -448,17 +448,6 @@ struct FeatureCard: View {
 
 // MARK: - Data Models
 
-struct AIFeature: Identifiable {
-    let id: String
-    let title: String
-    let subtitle: String
-    let icon: String
-    let color: Color
-    let description: String
-    let howItWorks: [String]
-    let benefits: [String]
-}
-
 // MARK: - Preview
 
 struct AIFeatureOverview_Previews: PreviewProvider {

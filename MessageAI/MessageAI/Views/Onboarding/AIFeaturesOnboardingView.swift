@@ -12,34 +12,38 @@ struct AIFeaturesOnboardingView: View {
         AIFeature(
             id: "summarization",
             title: "Smart Summaries",
-            description: "Get AI-powered summaries of long conversations",
+            subtitle: "AI-powered conversation analysis",
             icon: "doc.text",
             color: .blue,
+            description: "Get AI-powered summaries of long conversations",
             demoText: "This conversation covered project planning, timeline discussions, and resource allocation. " +
                      "Key decisions were made about the Q1 roadmap."
         ),
         AIFeature(
             id: "clarity",
             title: "Clarity Assistant",
-            description: "Improve message clarity before sending",
+            subtitle: "Pre-send message analysis",
             icon: "lightbulb",
             color: .yellow,
+            description: "Improve message clarity before sending",
             demoText: "Original: 'The thing needs fixing'\nImproved: 'The authentication bug needs fixing'"
         ),
         AIFeature(
             id: "actionItems",
             title: "Action Items",
-            description: "Automatically extract tasks and commitments",
+            subtitle: "Automatic task extraction",
             icon: "checklist",
             color: .green,
+            description: "Automatically extract tasks and commitments",
             demoText: "✅ Review code by Friday\n✅ Update documentation\n✅ Test new features"
         ),
         AIFeature(
             id: "toneAnalysis",
             title: "Tone Check",
-            description: "Ensure your message tone is appropriate",
+            subtitle: "Professional communication",
             icon: "exclamationmark.triangle",
             color: .orange,
+            description: "Ensure your message tone is appropriate",
             demoText: "Warning: This might sound abrupt\nSuggestion: 'I understand your concern, but...'"
         )
     ]
@@ -184,7 +188,7 @@ struct FeatureDemoView: View {
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text(feature.demoText)
+                    Text(feature.demoText ?? "No demo available")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .padding()
@@ -230,47 +234,6 @@ struct FeatureDemoView: View {
     }
 }
 
-// MARK: - AI Feature Model
-
-struct AIFeature {
-    let id: String
-    let title: String
-    let description: String
-    let icon: String
-    let color: Color
-    let demoText: String
-    
-    var benefits: [String] {
-        switch id {
-        case "summarization":
-            return [
-                "Save time on long conversations",
-                "Quickly understand key points",
-                "Never miss important decisions"
-            ]
-        case "clarity":
-            return [
-                "Improve communication effectiveness",
-                "Reduce misunderstandings",
-                "Professional message quality"
-            ]
-        case "actionItems":
-            return [
-                "Never lose track of tasks",
-                "Automatic task extraction",
-                "Clear accountability"
-            ]
-        case "toneAnalysis":
-            return [
-                "Maintain professional tone",
-                "Avoid communication issues",
-                "Better team relationships"
-            ]
-        default:
-            return []
-        }
-    }
-}
 
 // MARK: - Onboarding Manager
 

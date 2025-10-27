@@ -52,11 +52,9 @@ enum TestFirebaseConfig {
             }
         }
         
-        // Clear all users from Auth
-        let users = try await Auth.auth().getUsers([])
-        for user in users.users {
-            try await user.delete()
-        }
+        // Note: Cannot clear Auth users in client SDK
+        // This would require Firebase Admin SDK
+        print("⚠️ Cannot clear Auth users from client SDK")
         
         print("🧹 Test data cleared from emulators")
     }
@@ -64,7 +62,7 @@ enum TestFirebaseConfig {
     // MARK: - Test User Creation
     
     /// Creates a test user for UI tests
-    static func createTestUser(email: String, password: String) async throws -> User {
+    static func createTestUser(email: String, password: String) async throws -> FirebaseAuth.User {
         // Sign out any existing user first
         try? Auth.auth().signOut()
         
@@ -81,7 +79,7 @@ enum TestFirebaseConfig {
     }
     
     /// Signs in a test user
-    static func signInTestUser(email: String, password: String) async throws -> User {
+    static func signInTestUser(email: String, password: String) async throws -> FirebaseAuth.User {
         let result = try await Auth.auth().signIn(withEmail: email, password: password)
         print("🔐 Test user signed in: \(email)")
         return result.user

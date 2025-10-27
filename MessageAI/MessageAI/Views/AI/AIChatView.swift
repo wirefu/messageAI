@@ -21,14 +21,13 @@ struct AIChatView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Messages area
-                messagesArea
-                
-                // Input area
-                inputArea
-            }
+        VStack(spacing: 0) {
+            // Messages area
+            messagesArea
+            
+            // Input area
+            inputArea
+        }
             .navigationTitle("AI Assistant")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -232,7 +231,6 @@ struct AIChatView: View {
             .background(Color(.systemBackground))
         }
     }
-}
 
 // MARK: - Supporting Views
 
