@@ -132,28 +132,22 @@ final class AIChatViewModel: ObservableObject {
     /// Get conversation context from recent messages across all conversations
     private func getConversationContext() async -> [[String: Any]] {
         do {
-            // Get the current authenticated user ID
             guard let currentUserID = Auth.auth().currentUser?.uid else {
                 print("No authenticated user found")
                 return []
             }
             
-            // Get all conversations for the current user
             let conversationsSnapshot = try await db.collection("conversations")
                 .whereField("participants", arrayContains: currentUserID)
                 .getDocuments()
             
             var allContext: [[String: Any]] = []
             
-            // Get recent messages from each conversation
             for conversationDoc in conversationsSnapshot.documents {
                 let conversationId = conversationDoc.documentID
                 
                 do {
-                    // Get recent messages for AI context (last 5 messages per conversation)
                     let recentMessages = try await messageRepository.getAIContext(for: conversationId, limit: 5)
-                    
-                    // Convert messages to context format
                     let conversationContext = recentMessages.map { message in
                         [
                             "id": message.id,
@@ -163,21 +157,21 @@ final class AIChatViewModel: ObservableObject {
                             "conversationId": conversationId
                         ]
                     }
-                    
                     allContext.append(contentsOf: conversationContext)
                 } catch {
                     print("Failed to get context for conversation \(conversationId): \(error)")
-                    // Continue with other conversations
                 }
             }
             
-            // Sort by timestamp (most recent first) and limit to last 20 messages
             let sortedContext = allContext.sorted { 
                 ($0["timestamp"] as? TimeInterval ?? 0) > ($1["timestamp"] as? TimeInterval ?? 0) 
             }
             
             return Array(sortedContext.prefix(20))
-            
+        } catch {
+            print("Error getting conversation context: \(error)")
+            return []
+        }
     }
     
     /// Get user data context (action items, tasks, etc.)
@@ -190,38 +184,9 @@ final class AIChatViewModel: ObservableObject {
             
             print("🔍 DEBUG: Getting user data context for user: \(currentUserID)")
             
+            let allActionItems = try await fetchUserActionItems(userID: currentUserID)
+            
             var userData: [String: Any] = [:]
-            
-            // Get all conversations for the current user
-            let conversationsSnapshot = try await db.collection("conversations")
-                .whereField("participants", arrayContains: currentUserID)
-                .getDocuments()
-            
-            var allActionItems: [[String: Any]] = []
-            
-            // Get action items from all conversations
-            for conversationDoc in conversationsSnapshot.documents {
-                let conversationId = conversationDoc.documentID
-                
-                let actionItemsSnapshot = try await db.collection("conversations")
-                    .document(conversationId)
-                    .collection("actionItems")
-                    .getDocuments()
-                
-                for actionItemDoc in actionItemsSnapshot.documents {
-                    let data = actionItemDoc.data()
-                    let actionItem: [String: Any] = [
-                        "id": actionItemDoc.documentID,
-                        "description": data["description"] as? String ?? "",
-                        "assignedTo": data["assignedTo"] as? String ?? "",
-                        "dueDate": data["dueDate"] as? Double ?? 0,
-                        "isCompleted": data["isCompleted"] as? Bool ?? false,
-                        "conversationId": conversationId
-                    ]
-                    allActionItems.append(actionItem)
-                }
-            }
-            
             userData["actionItems"] = allActionItems
             userData["userId"] = currentUserID
             
@@ -238,6 +203,41 @@ final class AIChatViewModel: ObservableObject {
             print("❌ Error getting user data context: \(error.localizedDescription)")
             return getMockUserDataContext()
         }
+    }
+    
+    /// Fetch action items for a specific user from all their conversations
+    private func fetchUserActionItems(userID: String) async throws -> [[String: Any]] {
+        // Get all conversations for the current user
+        let conversationsSnapshot = try await db.collection("conversations")
+            .whereField("participants", arrayContains: userID)
+            .getDocuments()
+        
+        var allActionItems: [[String: Any]] = []
+        
+        // Get action items from all conversations
+        for conversationDoc in conversationsSnapshot.documents {
+            let conversationId = conversationDoc.documentID
+            
+            let actionItemsSnapshot = try await db.collection("conversations")
+                .document(conversationId)
+                .collection("actionItems")
+                .getDocuments()
+            
+            for actionItemDoc in actionItemsSnapshot.documents {
+                let data = actionItemDoc.data()
+                let actionItem: [String: Any] = [
+                    "id": actionItemDoc.documentID,
+                    "description": data["description"] as? String ?? "",
+                    "assignedTo": data["assignedTo"] as? String ?? "",
+                    "dueDate": data["dueDate"] as? Double ?? 0,
+                    "isCompleted": data["isCompleted"] as? Bool ?? false,
+                    "conversationId": conversationId
+                ]
+                allActionItems.append(actionItem)
+            }
+        }
+        
+        return allActionItems
     }
     
     /// Provides mock user data context for demo purposes when no real user data exists

@@ -205,7 +205,8 @@ final class ChatViewModel: ObservableObject {
                         messageID: message.id
                     )
                     
-                    let successMessage = "✅ Extracted \(extractedItems.count) action items: \(extractedItems.map { $0.description })\n"
+                    let successMessage = "✅ Extracted \(extractedItems.count) action items: " +
+                        "\(extractedItems.map { $0.description })\n"
                     try successMessage.write(to: debugFileURL, atomically: false, encoding: .utf8)
                 } catch {
                     let errorMessage = "❌ Action item extraction failed: \(error.localizedDescription)\n"

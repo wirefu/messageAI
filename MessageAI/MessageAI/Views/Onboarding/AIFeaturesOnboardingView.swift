@@ -234,7 +234,6 @@ struct FeatureDemoView: View {
     }
 }
 
-
 // MARK: - Onboarding Manager
 
 class AIFeaturesOnboardingManager: ObservableObject {

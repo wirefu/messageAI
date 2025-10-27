@@ -181,7 +181,8 @@ struct ChatView: View {
                 autoTriggerService.markAutoTriggerPromptShown(conversationID: conversation.id)
             }
         } message: {
-            Text("You have \(viewModel.messages.filter { !$0.isRead }.count) unread messages. Would you like an AI summary to catch up quickly?")
+            Text("You have \(viewModel.messages.filter { !$0.isRead }.count) unread messages. " +
+                 "Would you like an AI summary to catch up quickly?")
         }
         .task {
             await loadOtherUser()

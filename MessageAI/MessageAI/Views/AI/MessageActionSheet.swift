@@ -347,8 +347,6 @@ struct MessageActionSheet: View {
 
 // MARK: - Supporting Types
 
-
-
 // MARK: - Preview
 
 struct MessageActionSheet_Previews: PreviewProvider {
